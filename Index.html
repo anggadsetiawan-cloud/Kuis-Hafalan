@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kuis Hafalan</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f1efff;--c:#fff;--t:#222a52;--p:#3a4cb5;--ok:#2f9e6e;--no:#d9456b;--bd:#d5d2f2}
+@media(prefers-color-scheme:dark){:root{--bg:#161a36;--c:#20264d;--t:#eceeff;--p:#7f8cf0;--bd:#38407a}}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:560px;padding:16px;font-family:Nunito,system-ui,sans-serif;font-weight:600;background:var(--bg);color:var(--t)}
+h1{font-size:26px;font-weight:800;margin:8px 0 4px}
+.card{background:var(--c);border:1px solid var(--bd);border-radius:18px;padding:16px;margin:12px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+button{font:inherit;cursor:pointer;color:var(--t)}
+.chip{padding:9px 15px;border:2px solid var(--bd);border-radius:22px;background:var(--c)}
+.chip.on{background:var(--p);border-color:var(--p);color:#fff}
+.go{width:100%;padding:15px;border:0;border-radius:14px;background:var(--p);color:#fff;font-size:18px;font-weight:800;margin-top:6px}
+.go:disabled{opacity:.6}
+.ar{font-family:Amiri,'Traditional Arabic',serif;direction:rtl;text-align:right;font-size:26px;line-height:2;font-weight:400}
+.opt{display:block;width:100%;margin:8px 0;padding:13px;border:2px solid var(--bd);border-radius:14px;background:var(--c);text-align:left;font-size:17px}
+.opt.ar{text-align:right;font-size:22px;line-height:1.9}
+.opt.ok{border-color:var(--ok);background:rgba(47,158,110,.2)}
+.opt.no{border-color:var(--no);background:rgba(217,69,107,.2)}
+.sm{opacity:.75;font-size:14px}
+.sel{width:100%;margin-top:8px;padding:12px;border:2px solid var(--bd);border-radius:12px;background:var(--c);color:var(--t);font:inherit;font-size:17px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.fin{padding:8px 18px;border:2px solid var(--no);border-radius:20px;background:var(--c);font-weight:800}
+.row{display:flex;gap:8px;align-items:center}
+.row .opt{flex:1;margin:8px 0}
+.spk{flex:none;width:52px;height:52px;border:2px solid var(--bd);border-radius:14px;background:var(--c);font-size:20px}
+#nav{margin:0 0 6px}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:12px 0}
+.slot{min-height:50px;border:2px dashed var(--bd);border-radius:12px;display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--c)}
+.slot b{opacity:.6;min-width:22px}
+.slot.ok{border:2px solid var(--ok);background:var(--ok);color:#fff}
+.slot.bad{border:2px solid var(--no);background:var(--no);color:#fff;animation:sh .3s}
+.slot.hot{border-color:var(--p);background:rgba(58,76,181,.15)}
+.pool{position:sticky;bottom:8px;z-index:5;display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:1px solid var(--bd);border-radius:16px;background:var(--c);max-height:36vh;overflow:auto;box-shadow:0 -4px 14px rgba(0,0,0,.12)}
+.blk{padding:9px 13px;border-radius:12px;background:var(--p);color:#fff;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab}
+.blk.on{outline:3px solid #f5b83d}
+.blk.bad{background:var(--no)}
+.ghost{position:fixed;z-index:50;pointer-events:none;opacity:.92;transform:translate(-50%,-130%)}
+.ov{position:fixed;inset:0;background:rgba(10,12,30,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
+.pop{background:var(--c);border-radius:22px;padding:24px;max-width:380px;width:100%;text-align:center}
+@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.hint{animation:pl .8s infinite}
+.slot.hint{border:2px solid #f5b83d}
+@keyframes pl{50%{box-shadow:0 0 0 6px rgba(245,184,61,.7)}}
+button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
+</style></head><body>
+<div id="nav" class="chips"></div>
+<div id="app"></div>
+<script>
+// Surat 1-114: nama|jumlah ayat
+const SS="Al-Fatihah|7;Al-Baqarah|286;Ali 'Imran|200;An-Nisa'|176;Al-Ma'idah|120;Al-An'am|165;Al-A'raf|206;Al-Anfal|75;At-Taubah|129;Yunus|109;Hud|123;Yusuf|111;Ar-Ra'd|43;Ibrahim|52;Al-Hijr|99;An-Nahl|128;Al-Isra'|111;Al-Kahfi|110;Maryam|98;Thaha|135;Al-Anbiya'|112;Al-Hajj|78;Al-Mu'minun|118;An-Nur|64;Al-Furqan|77;Asy-Syu'ara'|227;An-Naml|93;Al-Qashash|88;Al-'Ankabut|69;Ar-Rum|60;Luqman|34;As-Sajdah|30;Al-Ahzab|73;Saba'|54;Fathir|45;Yasin|83;Ash-Shaffat|182;Shad|88;Az-Zumar|75;Ghafir|85;Fushshilat|54;Asy-Syura|53;Az-Zukhruf|89;Ad-Dukhan|59;Al-Jatsiyah|37;Al-Ahqaf|35;Muhammad|38;Al-Fath|29;Al-Hujurat|18;Qaf|45;Adz-Dzariyat|60;Ath-Thur|49;An-Najm|62;Al-Qamar|55;Ar-Rahman|78;Al-Waqi'ah|96;Al-Hadid|29;Al-Mujadilah|22;Al-Hasyr|24;Al-Mumtahanah|13;Ash-Shaff|14;Al-Jumu'ah|11;Al-Munafiqun|11;At-Taghabun|18;At-Talaq|12;At-Tahrim|12;Al-Mulk|30;Al-Qalam|52;Al-Haqqah|52;Al-Ma'arij|44;Nuh|28;Al-Jinn|28;Al-Muzzammil|20;Al-Muddatsir|56;Al-Qiyamah|40;Al-Insan|31;Al-Mursalat|50;An-Naba'|40;An-Nazi'at|46;'Abasa|42;At-Takwir|29;Al-Infithar|19;Al-Muthaffifin|36;Al-Insyiqaq|25;Al-Buruj|22;Ath-Thariq|17;Al-A'la|19;Al-Ghasyiyah|26;Al-Fajr|30;Al-Balad|20;Asy-Syams|15;Al-Lail|21;Adh-Dhuha|11;Al-Insyirah|8;At-Tin|8;Al-'Alaq|19;Al-Qadr|5;Al-Bayyinah|8;Az-Zalzalah|8;Al-'Adiyat|11;Al-Qari'ah|11;At-Takatsur|8;Al-'Ashr|3;Al-Humazah|9;Al-Fil|5;Quraisy|4;Al-Ma'un|7;Al-Kautsar|3;Al-Kafirun|6;An-Nasr|3;Al-Lahab|5;Al-Ikhlas|4;Al-Falaq|5;An-Nas|6";
+const S=SS.split(";").map(x=>{const[a,b]=x.split("|");return[a,+b]});
+const nm=n=>S[n-1][0],cnt=n=>S[n-1][1];
+// Awal tiap juz [surat, ayat]
+const JU=[[1,1],[2,142],[2,253],[3,93],[4,24],[4,148],[5,82],[6,111],[7,88],[8,41],[9,93],[11,6],[12,53],[15,1],[17,1],[18,75],[21,1],[23,1],[25,21],[27,56],[29,46],[33,31],[36,28],[39,32],[41,47],[46,1],[51,31],[58,1],[67,1],[78,1]];
+const TY={urutan:"Urutan surat",sambung:"Sambung surat",lanjut:"Lanjut ayat",audio:"Soal audio"};
+const MD=[["juz","Per juz"],["surat","Per surat"],["rjuz","Rentang juz"],["rsurat","Rentang surat"]];
+const R=Array.from({length:114},(_,i)=>i+1);
+const $=id=>document.getElementById(id);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+const pad=n=>String(n).padStart(3,"0");
+const bare=s=>s.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640]/g,"");
+const pick=(xs,key,ban)=>{const seen=new Set([ban]),o=[];for(const x of xs){const k=key(x);if(!seen.has(k)){seen.add(k);o.push(x);if(o.length==3)break}}return o};
+let types=new Set(Object.keys(TY)),T={},ans=0,score=0,mode="juz",P={juz:[30,30],surat:[78,78]},B={},SL=[],cur=null;
+const au=new Audio();
+const kind=()=>mode.endsWith("juz")?"juz":"surat",rng=()=>mode[0]=="r";
+
+function play(s,a){au.src=`https://everyayah.com/data/Alafasy_128kbps/${pad(s)}${pad(a)}.mp3`;au.play().catch(()=>{})}
+
+// Pilihan -> {nomor surat: [ayat awal, ayat akhir]}
+function selB(){
+  const k=kind();let[a,b]=P[k];if(!rng())b=a;if(a>b)[a,b]=[b,a];
+  const o={},add=(s,l,h)=>{o[s]=o[s]?[Math.min(o[s][0],l),Math.max(o[s][1],h)]:[l,h]};
+  if(k=="surat"){for(let s=a;s<=b;s++)add(s,1,cnt(s))}
+  else for(let j=a;j<=b;j++){
+    const[ss,sa]=JU[j-1];let es,ea;
+    if(j<30){[es,ea]=JU[j];if(ea==1){es--;ea=cnt(es)}else ea--}else{es=114;ea=6}
+    for(let s=ss;s<=es;s++)add(s,s==ss?sa:1,s==es?ea:cnt(s));
+  }
+  return o;
+}
+
+const fix=(n,ay)=>ay.map((x,i)=>{const w=x.text.trim().split(" ");return i==0&&n!=1&&bare(w[0])=="بسم"?w.slice(4).join(" "):x.text.trim()});
+const save=n=>{try{localStorage.setItem("q"+n,JSON.stringify(T[n]))}catch(e){}};
+async function loadAll(ns){
+  const q=[...ns].filter(n=>{if(T[n])return false;try{const c=localStorage.getItem("q"+n);if(c){T[n]=JSON.parse(c);return false}}catch(e){}return true});
+  if(q.length>20){
+    const d=await(await fetch("https://api.alquran.cloud/v1/quran/quran-uthmani")).json();
+    d.data.surahs.forEach(su=>{T[su.number]=fix(su.number,su.ayahs);save(su.number)});
+    return;
+  }
+  await Promise.all(Array.from({length:5},async()=>{
+    while(q.length){const n=q.shift();const d=await(await fetch(`https://api.alquran.cloud/v1/surah/${n}/quran-uthmani`)).json();T[n]=fix(n,d.data.ayahs);save(n)}
+  }));
+}
+
+function mk(ty,sl){
+  const s=rnd(sl),n=cnt(s),[lo,hi]=B[s];
+  if(ty=="urutan"){
+    let d=rnd([1,-1]),t=s+d;
+    if(t<1||t>114){d=-d;t=s+d}
+    const P2=sl.length>6?sl:R,w=shuf(P2.filter(x=>x!=t&&x!=s)).slice(0,3);
+    return{q:`Surat <b>${d>0?"setelah":"sebelum"}</b> ${nm(s)} adalah…`,o:shuf([t,...w]).map(x=>({t:nm(x),ok:x==t})),ex:`${nm(t)} (surat ke-${t})`};
+  }
+  if(ty=="sambung"){
+    const E=sl.filter(x=>x<114&&B[x][1]==cnt(x)&&B[x+1]&&B[x+1][0]==1);
+    if(!E.length)return mk("lanjut",sl);
+    const f=rnd(E),t=f+1,w=pick(shuf(Object.keys(T).map(Number).filter(x=>x!=t)),x=>T[x][0],T[t][0]);
+    return{q:`Ayat terakhir surat <b>${nm(f)}</b>:<div class="ar">${T[f][cnt(f)-1]}</div>Surat berikutnya dimulai dengan…`,qa:[f,cnt(f)],
+      o:shuf([t,...w]).map(x=>({t:T[x][0],ok:x==t,ar:1,a:[x,1]})),ex:`Surat berikutnya: ${nm(t)}`,a:[t,1]};
+  }
+  if(ty=="audio"&&Math.random()<.4){
+    const k=lo+Math.floor(Math.random()*(hi-lo+1));
+    if(sl.length==1){const v=shuf(Array.from({length:n},(_,i)=>i+1).filter(x=>x!=k)).slice(0,3);
+      return{q:`Dengarkan ayat ini. Surat ${nm(s)} ayat ke berapa?`,pa:[s,k],o:shuf([k,...v]).map(x=>({t:"Ayat "+x,ok:x==k})),ex:`${nm(s)} ayat ${k}`,a:[s,k]}}
+    const w=shuf((sl.length>6?sl:R).filter(x=>x!=s)).slice(0,3);
+    return{q:"Dengarkan ayat ini. Dari surat apa?",pa:[s,k],o:shuf([s,...w]).map(x=>({t:nm(x),ok:x==s})),ex:`${nm(s)} ayat ${k}`,a:[s,k]};
+  }
+  // lanjut ayat (tengah surat) atau versi audionya
+  if(hi<=lo)return mk(ty,sl);
+  const k=lo+Math.floor(Math.random()*(hi-lo)),isA=ty=="audio",cor=T[s][k];
+  const cand=T[s].map((x,i)=>[s,i+1,x]).filter(c=>c[1]!=k&&c[1]!=k+1);
+  const w=pick(shuf(cand),c=>c[2],cor).map(c=>({t:c[2],ok:0,ar:1,a:[c[0],c[1]]}));
+  for(let g=0;w.length<3&&g<80;g++){const r=+rnd(Object.keys(T)),i=Math.floor(Math.random()*T[r].length),x=T[r][i];if(x!=cor&&!w.some(v=>v.t==x))w.push({t:x,ok:0,ar:1,a:[r,i+1]})}
+  const o=shuf([{t:cor,ok:1,ar:1,a:[s,k+1]},...w]);
+  return isA?{q:"Dengarkan ayat ini. Apa lanjutannya?",pa:[s,k],o,ex:`${nm(s)} ayat ${k+1}`,a:[s,k+1]}
+    :{q:`Surat <b>${nm(s)}</b> ayat ${k}:<div class="ar">${T[s][k-1]}</div>Lanjutannya…`,qa:[s,k],o,ex:`${nm(s)} ayat ${k+1}`,a:[s,k+1]};
+}
+
+function home(msg){
+  const k=kind(),r=rng(),max=k=="juz"?30:114,[a,b]=P[k];
+  const op=v=>R.slice(0,max).map(i=>`<option value="${i}" ${i==v?"selected":""}>${k=="juz"?"Juz "+i:i+". "+nm(i)}</option>`).join("");
+  const pilih=r?`<div class="sm" style="margin-top:10px">Dari</div><select id="s1" class="sel">${op(a)}</select><div class="sm" style="margin-top:10px">Sampai</div><select id="s2" class="sel">${op(b)}</select><div class="chips"><button class="chip" id="all">Pilih semua</button></div>`
+    :`<select id="s1" class="sel">${op(a)}</select>`;
+  $("app").innerHTML=`<h1>Kuis Hafalan</h1><div class="sm">Latihan urutan surat dan sambung ayat</div>
+  <div class="card"><b>Mode</b><div class="chips">${MD.map(([m,l])=>`<button class="chip ${mode==m?"on":""}" data-m="${m}">${l}</button>`).join("")}</div>${pilih}</div>
+  <div class="card"><b>Jenis soal</b><div class="chips">${Object.entries(TY).map(([k2,v])=>`<button class="chip ${types.has(k2)?"on":""}" data-t="${k2}">${v}</button>`).join("")}</div></div>
+  <div class="sm">${msg||"Soal tanpa batas, tekan Selesai kapan saja. Suara: Syekh Mishary Alafasy. Butuh internet."}</div>
+  <button class="go" id="go">Mulai</button>`;
+  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>{mode=x.dataset.m;home()});
+  document.querySelectorAll("[data-t]").forEach(x=>x.onclick=()=>{const t=x.dataset.t;types.has(t)?types.delete(t):types.add(t);home()});
+  $("s1").onchange=e=>{P[k][0]=+e.target.value;if(!r)P[k][1]=P[k][0]};
+  if(r){$("s2").onchange=e=>{P[k][1]=+e.target.value};$("all").onclick=()=>{P[k]=[1,max];home()}}
+  $("go").onclick=start;
+}
+
+async function start(){
+  if(!types.size)return home("Pilih minimal satu jenis soal.");
+  B=selB();SL=Object.keys(B).map(Number);
+  $("go").textContent="Memuat ayat…";$("go").disabled=true;
+  const ex=SL.length<6?SL.flatMap(s=>[s-2,s-1,s+2,s+3]):[];
+  try{await loadAll(new Set([...SL,...SL.map(x=>x+1),...ex].filter(x=>x>=1&&x<=114)))}
+  catch(e){return home("Gagal memuat ayat. Periksa internet, lalu coba lagi.")}
+  ans=0;score=0;seen.clear();next();
+}
+
+const seen=new Set(),kk=q=>q.q+"|"+(q.pa||q.qa||[]).join(",");
+function next(){
+  let q,g=0;
+  do{q=mk(rnd([...types]),SL);g++}while(seen.has(kk(q))&&g<60);
+  if(seen.has(kk(q)))seen.clear(); // semua soal sudah terpakai, mulai putaran baru
+  seen.add(kk(q));cur=q;show();
+}
+
+function show(){
+  const q=cur;
+  $("app").innerHTML=`<div class="top"><span class="sm" id="st">Soal ${ans+1} · Benar ${score} dari ${ans}</span><button class="fin" id="fin">Selesai</button></div>
+  <div class="card">${q.q}${q.pa||q.qa?`<div><button class="chip" id="pq">🔊 Putar ayat</button></div>`:""}</div>
+  <div id="os">${q.o.map((o,i)=>`<div class="row"><button class="opt ${o.ar?"ar":""}" data-i="${i}">${o.t}</button>${o.a?`<button class="spk" data-p="${i}" aria-label="Dengar pilihan">🔊</button>`:""}</div>`).join("")}</div><div id="fb"></div>`;
+  if(q.pa||q.qa){$("pq").onclick=()=>play(...(q.pa||q.qa));if(q.pa)play(...q.pa)}
+  document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>play(...q.o[+b.dataset.p].a));
+  document.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>answer(+b.dataset.i));
+  $("fin").onclick=end;
+}
+
+function answer(i){
+  const q=cur,bs=[...document.querySelectorAll("[data-i]")],ok=q.o[i].ok;
+  bs.forEach((b,j)=>{b.disabled=true;if(q.o[j].ok)b.classList.add("ok");else if(j==i)b.classList.add("no")});
+  ans++;if(ok)score++;
+  $("st").textContent=`Soal ${ans} · Benar ${score} dari ${ans}`;
+  if(q.a)play(...q.a);
+  $("fb").innerHTML=`<div class="card">${ok?"✅ Benar!":"❌ Belum tepat."} ${q.ex}${q.a?`<div><button class="chip" id="rp">🔊 Dengar lagi</button></div>`:""}</div>
+  <button class="go" id="nx">Soal berikutnya</button>`;
+  if(q.a)$("rp").onclick=()=>play(...q.a);
+  $("nx").onclick=()=>{au.pause();next()};
+}
+
+function end(){
+  au.pause();
+  const p=ans?Math.round(score/ans*100):0;
+  const m=!ans?"Belum ada soal yang dikerjakan.":p>=90?"Masya Allah, hebat sekali!":p>=60?"Bagus! Terus diulang ya.":"Tidak apa-apa, ulangi lagi pelan-pelan.";
+  $("app").innerHTML=`<h1>${who?esc(who)+" · ":""}Nilai ${p}</h1><div class="card"><b>${score} benar dari ${ans} soal</b> yang dikerjakan.<br>${m}</div>${ans?`<div class="card" style="text-align:center"><p>${rnd(DOA)}</p><div class="ar" style="text-align:center;font-size:28px">رَبِّ زِدْنِي عِلْمًا</div><div class="sm">“Ya Rabbku, tambahkanlah ilmu kepadaku.”</div></div>`:""}
+  <button class="go" id="again">Main lagi</button><button class="go" id="hm" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Ubah pilihan</button>`;
+  $("again").onclick=start;$("hm").onclick=()=>home();
+}
+// ===== Susun urutan surat =====
+let tab="kuis",dir="asc",SU={},ac=null,hotEl=null;
+const DOA=["Barakallah! Semoga Allah mudahkan hafalanmu dan menjadikannya cahaya di hati. Aamiin.","Masya Allah, tabarakallah! Semoga hafalanmu terjaga sampai akhir hayat. Aamiin.","Barakallahu fiik! Semoga ilmu dan hafalanmu membawa keberkahan dan manfaat. Aamiin."];
+
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let who=ls.get("nama")||"";
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function askName(first){
+  const o=document.createElement("div");o.className="ov";
+  o.innerHTML=`<div class="pop"><h1>${first?"Siapa namamu?":"Ganti nama"}</h1><div class="sm">Nama tersimpan di HP ini untuk mencatat rekor.</div>
+  <input id="nmi" class="sel" maxlength="20" placeholder="Contoh: Fulan"><button class="go" id="nms">Simpan</button>
+  ${first?"":`<button class="go" id="nmc" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Batal</button>`}</div>`;
+  document.body.appendChild(o);
+  $("nmi").value=first?"":who;
+  const save=()=>{const v=$("nmi").value.trim().slice(0,20);if(!v)return $("nmi").focus();who=v;ls.set("nama",v);o.remove();navBar()};
+  $("nms").onclick=save;$("nmi").onkeydown=e=>{if(e.key=="Enter")save()};
+  if(!first)$("nmc").onclick=()=>o.remove();
+  $("nmi").focus();
+}
+
+function navBar(){
+  $("nav").innerHTML=[["kuis","Kuis"],["susun","Susun urutan"]].map(([t,l])=>`<button class="chip ${tab==t?"on":""}" data-tab="${t}">${l}</button>`).join("")
+    +(who?`<span class="sm" style="align-self:center">👤 ${esc(who)}</span><button class="chip" id="chg">Ganti</button>`:"");
+  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;au.pause();navBar();tab=="kuis"?home():susunHome()});
+  const c=$("chg");if(c)c.onclick=()=>askName(false);
+}
+
+function snd(ok){
+  try{
+    ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume();
+    (ok?[[660,0],[880,.13]]:[[220,0],[160,.17]]).forEach(([f,t])=>{
+      const o=ac.createOscillator(),g=ac.createGain();o.type=ok?"sine":"square";o.frequency.value=f;g.gain.value=.15;
+      o.connect(g);g.connect(ac.destination);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+.14);
+    });
+  }catch(e){}
+  if(!ok&&navigator.vibrate)navigator.vibrate([80,40,80]);
+}
+
+function pickHTML(){
+  const k=kind(),r=rng(),max=k=="juz"?30:114,[a,b]=P[k];
+  const op=v=>R.slice(0,max).map(i=>`<option value="${i}" ${i==v?"selected":""}>${k=="juz"?"Juz "+i:i+". "+nm(i)}</option>`).join("");
+  return `<div class="card"><b>Mode</b><div class="chips">${MD.map(([m,l])=>`<button class="chip ${mode==m?"on":""}" data-m="${m}">${l}</button>`).join("")}</div>`
+   +(r?`<div class="sm" style="margin-top:10px">Dari</div><select id="s1" class="sel">${op(a)}</select><div class="sm" style="margin-top:10px">Sampai</div><select id="s2" class="sel">${op(b)}</select><div class="chips"><button class="chip" id="all">Pilih semua</button></div>`
+        :`<select id="s1" class="sel">${op(a)}</select>`)+`</div>`;
+}
+function pickBind(re){
+  const k=kind(),r=rng(),max=k=="juz"?30:114;
+  document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>{mode=x.dataset.m;re()});
+  $("s1").onchange=e=>{P[k][0]=+e.target.value;if(!r)P[k][1]=P[k][0]};
+  if(r){$("s2").onchange=e=>{P[k][1]=+e.target.value};$("all").onclick=()=>{P[k]=[1,max];re()}}
+}
+
+const sigNow=()=>{const k=kind();let[a,b]=P[k];if(!rng())b=a;return k+":"+Math.min(a,b)+"-"+Math.max(a,b)};
+const fmt=t=>Math.floor(t/60)+":"+String(t%60).padStart(2,"0");
+function recText(){
+  if(!who)return"";
+  let r=null;try{r=JSON.parse(ls.get("rek:"+who+":"+sigNow()))}catch(e){}
+  return r?`🏆 Rekor ${who}: ${r.s} kesalahan, ${fmt(r.t)}`:"Belum ada rekor untuk pilihan ini.";
+}
+
+function susunHome(){
+  $("app").innerHTML=`<h1>Susun Urutan</h1><div class="sm">Tarik atau ketuk blok nama surat ke slot yang tepat</div>${pickHTML()}
+  <div class="card"><b>Urutan slot</b><div class="chips">${[["asc","Sesuai mushaf"],["desc","Terbalik"],["auto","Otomatis"]].map(([d,l])=>`<button class="chip ${dir==d?"on":""}" data-d="${d}">${l}</button>`).join("")}</div>
+  <div class="sm" style="margin-top:8px">Sesuai mushaf: dari atas ke bawah mengikuti mushaf. Terbalik: dimulai dari surat paling belakang. Otomatis: arah dipilihkan acak.</div></div>
+  <div class="sm" id="rc"></div><button class="go" id="go">Mulai susun</button>`;
+  pickBind(susunHome);
+  document.querySelectorAll("[data-d]").forEach(x=>x.onclick=()=>{dir=x.dataset.d;susunHome()});
+  const rc=()=>{$("rc").textContent=recText()};rc();
+  $("s1").addEventListener("change",rc);if($("s2"))$("s2").addEventListener("change",rc);
+  $("go").onclick=susunStart;
+}
+
+function susunStart(){
+  const o=selB(),asc=Object.keys(o).map(Number).sort((a,b)=>a-b),d=dir=="auto"?rnd(["asc","desc"]):dir,L=d=="desc"?asc.reverse():asc;
+  SU={L,pool:shuf(L),placed:{},wrong:0,hints:0,wsince:0,selId:null,busy:{},t0:Date.now(),sig:sigNow()};
+  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}
+  $("app").innerHTML=`<div class="top"><span class="sm" id="sst"></span><span><button class="chip" id="hint">💡 Petunjuk</button> <button class="fin" id="sback">Kembali</button></span></div>
+  <div class="sm" style="margin-top:6px">Urutan: ${d=="asc"?"sesuai mushaf, dari atas ke bawah":"terbalik, surat paling belakang di atas"}. Petunjuk aktif setelah 3 kali salah berturut-turut.</div>
+  <div class="slots">${L.map((s,i)=>`<div class="slot" data-slot="${i}"><b>${i+1}</b><span></span></div>`).join("")}</div>
+  <div class="pool">${SU.pool.map(s=>`<div class="blk" data-b="${s}">${nm(s)}</div>`).join("")}</div>`;
+  stat();
+  $("sback").onclick=susunHome;$("hint").onclick=hint;
+  document.querySelectorAll(".slot").forEach(sl=>sl.onclick=()=>{if(SU.selId!=null)place(+sl.dataset.slot,SU.selId)});
+  document.querySelectorAll(".blk").forEach(bindBlk);
+  window.scrollTo(0,0);
+}
+
+const stat=()=>{
+  $("sst").textContent=`Terpasang ${Object.keys(SU.placed).length} dari ${SU.L.length} · Salah ${SU.wrong}`;
+  const h=$("hint");if(h){h.disabled=SU.wsince<3;h.style.opacity=h.disabled?.45:1}
+};
+function hint(){
+  if(SU.wsince<3)return;
+  const i=SU.L.findIndex((s,j)=>!SU.placed[j]);if(i<0)return;
+  SU.hints++;SU.wsince=0;stat();
+  const sl=document.querySelector(`[data-slot="${i}"]`),b=document.querySelector(`[data-b="${SU.L[i]}"]`);
+  if(b)b.scrollIntoView({block:"nearest"});
+  sl.scrollIntoView({block:"center",behavior:"smooth"});
+  [sl,b].forEach(e=>e&&e.classList.add("hint"));
+  setTimeout(()=>[sl,b].forEach(e=>e&&e.classList.remove("hint")),3000);
+}
+const mark=()=>document.querySelectorAll(".blk").forEach(b=>b.classList.toggle("on",+b.dataset.b==SU.selId));
+
+function hot(x,y){
+  const t=document.elementFromPoint(x,y),sl=t&&t.closest?t.closest(".slot"):null;
+  if(hotEl)hotEl.classList.remove("hot");
+  hotEl=sl&&!sl.classList.contains("ok")?sl:null;
+  if(hotEl)hotEl.classList.add("hot");
+}
+
+function bindBlk(el){
+  el.oncontextmenu=e=>e.preventDefault();
+  el.onpointerdown=e=>{
+    if(e.button>0)return;
+    e.preventDefault();
+    const s=+el.dataset.b,x0=e.clientX,y0=e.clientY;let g=null,moved=false,tm=null;
+    try{el.setPointerCapture(e.pointerId)}catch(_){}
+    const clean=()=>{el.onpointermove=el.onpointerup=el.onpointercancel=null;clearInterval(tm);if(g)g.remove();el.style.opacity="";if(hotEl)hotEl.classList.remove("hot");hotEl=null};
+    el.onpointermove=ev=>{
+      if(!moved&&Math.hypot(ev.clientX-x0,ev.clientY-y0)<8)return;
+      if(!moved){
+        moved=true;g=el.cloneNode(true);g.className="blk ghost";document.body.appendChild(g);el.style.opacity=.35;
+        tm=setInterval(()=>{if(g._y<90)scrollBy(0,-14);else if(g._y>innerHeight-30)scrollBy(0,14)},30);
+      }
+      g._y=ev.clientY;g.style.left=ev.clientX+"px";g.style.top=ev.clientY+"px";hot(ev.clientX,ev.clientY);
+    };
+    el.onpointerup=ev=>{
+      const t=moved?document.elementFromPoint(ev.clientX,ev.clientY):null,sl=t&&t.closest?t.closest(".slot"):null;
+      clean();
+      if(moved){if(sl)place(+sl.dataset.slot,s)}
+      else{SU.selId=SU.selId==s?null:s;mark()}
+    };
+    el.onpointercancel=clean;
+  };
+}
+
+function place(i,s){
+  if(SU.placed[i]||SU.busy[i]||!SU.pool.includes(s))return;
+  const sl=document.querySelector(`[data-slot="${i}"]`),b=document.querySelector(`[data-b="${s}"]`),sp=sl.querySelector("span");
+  if(SU.L[i]==s){
+    SU.placed[i]=1;SU.wsince=0;SU.pool=SU.pool.filter(x=>x!=s);if(SU.selId==s)SU.selId=null;
+    b.remove();sl.classList.add("ok");sp.textContent=nm(s);snd(true);stat();
+    if(!SU.pool.length)setTimeout(finish,700);
+  }else{
+    SU.wrong++;SU.wsince++;SU.busy[i]=1;
+    sl.classList.add("bad");sp.textContent=nm(s);b.classList.add("bad");snd(false);stat();
+    setTimeout(()=>{sl.classList.remove("bad");sp.textContent="";b.classList.remove("bad");SU.busy[i]=0},800);
+  }
+}
+
+function finish(){
+  const t=Math.round((Date.now()-SU.t0)/1000),sc=SU.wrong+SU.hints,key="rek:"+who+":"+SU.sig;
+  let p=null;try{p=JSON.parse(ls.get(key))}catch(e){}
+  const baru=!p||sc<p.s||(sc==p.s&&t<p.t);
+  if(baru&&who)ls.set(key,JSON.stringify({s:sc,t}));
+  const o=document.createElement("div");o.className="ov";
+  o.innerHTML=`<div class="pop"><div style="font-size:48px">🎉</div><h1>Masya Allah${who?", "+esc(who):""}!</h1>
+  <div>Semua ${SU.L.length} surat tersusun benar. Salah tarik: ${SU.wrong} · Petunjuk: ${SU.hints} · Waktu: ${fmt(t)}.</div>
+  <div class="sm" style="margin:6px 0">${baru?"🏆 Rekor baru!":"Rekor terbaikmu: "+p.s+" kesalahan, "+fmt(p.t)}</div>
+  <p>${rnd(DOA)}</p><div class="ar" style="text-align:center;font-size:30px">رَبِّ زِدْنِي عِلْمًا</div><div class="sm">“Ya Rabbku, tambahkanlah ilmu kepadaku.”</div>
+  <button class="go" id="again2">Susun lagi</button><button class="go" id="back2" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Kembali</button></div>`;
+  document.body.appendChild(o);
+  $("again2").onclick=()=>{o.remove();susunStart()};$("back2").onclick=()=>{o.remove();susunHome()};
+}
+
+navBar();home();if(!who)askName(true);
+</script></body></html>

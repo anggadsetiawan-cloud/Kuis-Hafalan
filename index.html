@@ -39,7 +39,7 @@ button{font:inherit;cursor:pointer;color:var(--t)}
 .slot.hot{border-color:var(--p);background:rgba(58,76,181,.15)}
 .pool{position:sticky;bottom:8px;z-index:5;display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:1px solid var(--bd);border-radius:16px;background:var(--c);max-height:36vh;overflow:auto;box-shadow:0 -4px 14px rgba(0,0,0,.12)}
 .blk{padding:9px 13px;border-radius:12px;background:var(--p);color:#fff;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:grab}
-.blk.on{outline:3px solid #f5b83d}
+.blk.on{outline:3px solid #fff;box-shadow:0 0 0 6px rgba(58,76,181,.6)}
 .blk.bad{background:var(--no)}
 .ghost{position:fixed;z-index:50;pointer-events:none;opacity:.92;transform:translate(-50%,-130%)}
 .ov{position:fixed;inset:0;background:rgba(10,12,30,.6);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
@@ -296,7 +296,7 @@ function susunStart(sub){
   SU={L,pool:shuf(L),placed:{},flag:{},wrong:0,hints:0,wsince:0,selId:null,busy:{},t0:Date.now(),sig:sub?null:sigNow(),sub};
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}
   $("app").innerHTML=`<div class="top"><span class="sm" id="sst"></span><span><button class="chip" id="hint">💡 Petunjuk</button> <button class="fin" id="sback">Kembali</button></span></div>
-  <div class="sm" style="margin-top:6px">Urutan: ${d=="asc"?"sesuai mushaf, dari atas ke bawah":"terbalik, surat paling belakang di atas"}. Petunjuk aktif setelah 3 kali salah berturut-turut. Hijau = benar langsung, kuning = pernah salah atau dibantu petunjuk.</div>
+  <div class="sm" style="margin-top:6px">Urutan: ${d=="asc"?"sesuai mushaf, dari atas ke bawah":"terbalik, surat paling belakang di atas"}. Petunjuk aktif setelah 3 kali salah berturut-turut. Hijau = slot langsung benar, kuning = slot pernah diisi blok salah atau dibantu petunjuk.</div>
   <div class="slots">${L.map((s,i)=>`<div class="slot" data-slot="${i}"><b>${hideNo?"Posisi "+(i+1):"Surah ke-"+s}</b><span></span></div>`).join("")}</div>
   <div class="pool">${SU.pool.map(s=>`<div class="blk" data-b="${s}">${nm(s)}</div>`).join("")}</div>`;
   stat();
@@ -363,7 +363,7 @@ function place(i,s){
     b.remove();sl.classList.add("ok");if(SU.flag[s])sl.classList.add("yel");else{const w=wk();if(w[s]>0){w[s]--;wset(w)}}sp.textContent=nm(s);snd(true);stat();
     if(!SU.pool.length)setTimeout(finish,700);
   }else{
-    SU.wrong++;SU.wsince++;SU.busy[i]=1;SU.flag[s]=1;{const w=wk();w[s]=(w[s]||0)+1;wset(w)}
+    SU.wrong++;SU.wsince++;SU.busy[i]=1;SU.flag[SU.L[i]]=1;{const w=wk(),u=SU.L[i];w[u]=(w[u]||0)+1;wset(w)}
     sl.classList.add("bad");sp.textContent=nm(s);b.classList.add("bad");snd(false);stat();
     setTimeout(()=>{sl.classList.remove("bad");sp.textContent="";b.classList.remove("bad");SU.busy[i]=0},800);
   }

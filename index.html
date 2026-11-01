@@ -82,6 +82,48 @@ button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
 .rk.me{background:var(--c2);border-radius:10px;padding:6px 8px;margin:2px -8px}
 .rkn{width:28px;text-align:center;color:var(--t2);font-weight:600}
 .rkt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qh{display:flex;align-items:center;gap:12px}
+.stc{display:flex;align-items:center;gap:4px;font-weight:600}
+.stc svg,.stars svg,.fbi svg{fill:currentColor}
+.stc svg{color:var(--warn)}
+.qc{background:rgba(79,70,229,.10);border-radius:16px;padding:20px 16px;margin:16px 0;text-align:center}
+.qc .ar{text-align:center;direction:rtl}
+.og{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.og.one{grid-template-columns:1fr}
+.og .row{display:flex;gap:8px;align-items:center}
+.og .row .opt{flex:1;margin:0}
+.opt{display:flex;align-items:center;gap:10px;min-height:60px;border-radius:16px;font-weight:500}
+.opt .lt{flex:none;width:32px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:rgba(79,70,229,.18)}
+.og>div:nth-child(2) .lt{background:rgba(245,184,61,.35)}
+.og>div:nth-child(3) .lt{background:rgba(194,57,90,.22)}
+.og>div:nth-child(4) .lt{background:rgba(31,122,84,.25)}
+.opt .ot{flex:1;min-width:0}
+.opt.ar{direction:ltr;text-align:left;font-size:inherit;line-height:1.5}
+.opt.ar .ot{direction:rtl;text-align:right;font-family:Amiri,'Traditional Arabic',serif;font-size:24px;line-height:1.9;font-weight:400}
+.opt.ok{border:1.5px solid var(--ok)}
+.opt.ok .lt{background:var(--ok);color:#fff}
+.opt.no{border:1.5px solid var(--warn);background:rgba(245,184,61,.16)}
+.opt.no .lt{background:var(--warn);color:#3a2a00}
+.opt:disabled{cursor:default}
+.fbx{display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px;border-radius:16px}
+.fbx.good{background:rgba(31,122,84,.14)}
+.fbx.bad{background:rgba(245,184,61,.2)}
+.fbi{flex:none;display:inline-flex}
+.fbx.good .fbi,.fbx.good .fbt{color:var(--okt)}
+.fbx.bad .fbi{color:var(--t2)}
+.fbt{font-weight:600;font-size:17px}
+.fbi svg{animation:vpop .5s ease-out}
+.stars{display:flex;justify-content:center;gap:6px;margin-bottom:8px}
+.stars span{color:var(--bd);display:inline-flex}
+.stars span.on{color:var(--warn)}
+.anak .opt{min-height:72px;font-size:19px}
+.anak .opt .lt{width:38px;height:38px;border-radius:19px;font-size:16px}
+.anak .opt.ar .ot{font-size:30px}
+.anak .qc{padding:28px 16px}
+.anak .qc .ar{font-size:36px}
+.anak .fbt{font-size:21px}
+.anak .go{min-height:56px;font-size:18px}
+@media (prefers-reduced-motion:reduce){.fbi svg{animation:none}}
 </style></head><body>
 <div id="nav"></div>
 <div id="app"></div>
@@ -192,7 +234,7 @@ async function start(){
   const ex=SL.length<6?SL.flatMap(s=>[s-2,s-1,s+2,s+3]):[];
   try{await loadAll(new Set([...SL,...SL.map(x=>x+1),...ex].filter(x=>x>=1&&x<=114)))}
   catch(e){return home("Gagal memuat ayat. Periksa internet, lalu coba lagi.")}
-  ans=0;score=0;seen.clear();next();
+  ans=0;score=0;hist=[];seen.clear();next();
 }
 
 const seen=new Set(),kk=q=>q.q+"|"+(q.pa||q.qa||[]).join(",");
@@ -203,25 +245,32 @@ function next(){
   seen.add(kk(q));cur=q;show();
 }
 
+const BENAR=["Baarakallah!","Alhamdulillah!","Allahu akbar!","Masya Allah!","Tabarakallah!","Masya Allah, tabarakallah!"];
+const SALAH=["Hampir! Bismillah, coba lagi ya.","Tidak apa-apa, insya Allah bisa.","Semangat! Ulangi pelan-pelan ya.","Bismillah, kita ulang lagi."];
+let hist=[];
+function qHead(a){
+  const st=Math.floor((a?ans-1:ans)/10)*10;let seg="";
+  for(let j=0;j<10;j++){const i=st+j,c=i<ans?(hist[i]?"var(--ok)":"var(--warn)"):(i==ans&&!a?"var(--p)":"var(--bd)");seg+=`<span style="height:8px;border-radius:4px;background:${c}"></span>`}
+  return`<button class="ib" id="fin" aria-label="Selesai">${I("x")}</button><div style="flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px" role="img" aria-label="Soal ${a?ans:ans+1}, benar ${score}">${seg}</div><div class="stc">${I("star",18)}<span>${score}</span></div>`;
+}
 function show(){
-  const q=cur;
-  $("app").innerHTML=`<div class="top"><span class="sm" id="st">Soal ${ans+1} · Benar ${score} dari ${ans}</span><button class="fin" id="fin">Selesai</button></div>
-  <div class="card">${q.q}${q.pa||q.qa?`<div><button class="chip" id="pq">${I("vol",18)} Putar ayat</button></div>`:""}</div>
-  <div id="os">${q.o.map((o,i)=>`<div class="row"><button class="opt ${o.ar?"ar":""}" data-i="${i}">${o.t}</button>${o.a?`<button class="spk" data-p="${i}" aria-label="Dengar pilihan">${I("vol",20)}</button>`:""}</div>`).join("")}</div><div id="fb"></div>`;
+  const q=cur,one=q.o.some(o=>o.ar||o.a||String(o.t).length>22);
+  $("app").innerHTML=`<div class="qh" id="qh">${qHead(false)}</div>
+  <div class="qc">${q.q}${q.pa||q.qa?`<div style="margin-top:10px"><button class="chip" id="pq">${I("vol",18)} Putar ayat</button></div>`:""}</div>
+  <div id="os" class="og ${one?"one":""}">${q.o.map((o,i)=>`<div class="row"><button class="opt ${o.ar?"ar":""}" data-i="${i}"><span class="lt">${"ABCDEFGH"[i]}</span><span class="ot">${o.t}</span></button>${o.a?`<button class="spk" data-p="${i}" aria-label="Dengar pilihan">${I("vol",20)}</button>`:""}</div>`).join("")}</div><div id="fb"></div>`;
   if(q.pa||q.qa){$("pq").onclick=()=>play(...(q.pa||q.qa));if(q.pa)play(...q.pa)}
   document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>play(...q.o[+b.dataset.p].a));
   document.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>answer(+b.dataset.i));
   $("fin").onclick=end;
 }
-
 function answer(i){
   const q=cur,bs=[...document.querySelectorAll("[data-i]")],ok=q.o[i].ok;
   bs.forEach((b,j)=>{b.disabled=true;if(q.o[j].ok)b.classList.add("ok");else if(j==i)b.classList.add("no")});
-  ans++;if(ok)score++;
-  $("st").textContent=`Soal ${ans} · Benar ${score} dari ${ans}`;
+  ans++;if(ok)score++;hist.push(!!ok);
+  $("qh").innerHTML=qHead(true);$("fin").onclick=end;
   if(q.a)play(...q.a);
-  $("fb").innerHTML=`<div class="card"><b style="color:${ok?"var(--okt)":"var(--no)"}">${ok?"Benar":"Belum tepat"}</b> ${q.ex}${q.a?`<div><button class="chip" id="rp">${I("vol",18)} Dengar lagi</button></div>`:""}</div>
-  <button class="go" id="nx">Soal berikutnya</button>`;
+  $("fb").innerHTML=`<div class="fbx ${ok?"good":"bad"}"><span class="fbi">${I(ok?"star":"repeat",26)}</span><div style="flex:1;min-width:0"><div class="fbt">${rnd(ok?BENAR:SALAH)}</div><div class="sm">${q.ex}</div>${q.a?`<div><button class="chip" id="rp">${I("vol",18)} Dengar lagi</button></div>`:""}</div></div>
+  <button class="go" id="nx">Lanjut</button>`;
   if(q.a)$("rp").onclick=()=>play(...q.a);
   $("nx").onclick=()=>{au.pause();next()};
 }
@@ -229,8 +278,8 @@ function answer(i){
 function end(){
   au.pause();
   const p=ans?Math.round(score/ans*100):0;
-  const m=!ans?"Belum ada soal yang dikerjakan.":p>=90?"Masya Allah, hebat sekali!":p>=60?"Bagus! Terus diulang ya.":"Tidak apa-apa, ulangi lagi pelan-pelan.";
-  $("app").innerHTML=`<h1>${who?esc(who)+" · ":""}Nilai ${p}</h1><div class="card"><b>${score} benar dari ${ans} soal</b> yang dikerjakan.<br>${m}</div>${ans?`<div class="card" style="text-align:center"><p>${rnd(DOA)}</p><div class="ar" style="text-align:center;font-size:28px">رَبِّ زِدْنِي عِلْمًا</div><div class="sm">“Ya Rabbku, tambahkanlah ilmu kepadaku.”</div></div>`:""}
+  const m=!ans?"Belum ada soal yang dikerjakan.":p>=90?"Masya Allah, tabarakallah!":p>=60?"Alhamdulillah, terus diulang ya.":"Tidak apa-apa, bismillah ulangi lagi pelan-pelan.",ns=!ans?0:p>=90?3:p>=60?2:1;
+  $("app").innerHTML=`<h1>${who?esc(who)+" · ":""}Nilai ${p}</h1><div class="card" style="text-align:center"><div class="stars">${[1,2,3].map(n=>`<span class="${n<=ns?"on":""}">${I("star",40)}</span>`).join("")}</div><b>${score} benar dari ${ans} soal</b><div>${m}</div></div>${ans?`<div class="card" style="text-align:center"><p>${rnd(DOA)}</p><div class="ar" style="text-align:center;font-size:28px">رَبِّ زِدْنِي عِلْمًا</div><div class="sm">“Ya Rabbku, tambahkanlah ilmu kepadaku.”</div></div>`:""}
   <button class="go" id="again">Main lagi</button><button class="go" id="hm" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Ubah pilihan</button>`;
   $("again").onclick=start;$("hm").onclick=()=>home();
 }
@@ -418,6 +467,8 @@ function finish(){
 
 // ===== Ikon garis & komponen kecil =====
 const IC={
+x:'<path d="M6 6l12 12M18 6L6 18"/>',
+star:'<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.7 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>',
 chart:'<path d="M5 20V11M12 20V5M19 20v-6"/>',
 gear:'<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
 check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
@@ -870,7 +921,7 @@ async function hqClick(e){
 }
 
 // ===== Tahap C: Latihan, Statistik, Pengaturan =====
-{const th=ls.get("tema");if(th)document.documentElement.dataset.theme=th}
+{const th=ls.get("tema");if(th)document.documentElement.dataset.theme=th;if(ls.get("anak")=="1")document.body.classList.add("anak")}
 const latSeg=cur=>`<div class="seg">${[["kuis","Kuis"],["susun","Susun urutan"]].map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-lat="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-lat]");if(b){tab=b.dataset.lat;au.pause();navBar();route()}});
 const route=()=>tab=="kuis"?home():tab=="susun"?susunHome():tab=="target"?targetHome():tab=="statistik"?statsHome():tab=="pengaturan"?pengaturanHome():mutabaahHome();
@@ -926,7 +977,7 @@ function statsHome(){
 }
 
 function pengaturanHome(){
-  const th=ls.get("tema")||"auto",vis=ls.get("vis:"+who)||"pohon";
+  const th=ls.get("tema")||"auto",vis=ls.get("vis:"+who)||"pohon",anak=ls.get("anak")=="1";
   const seg=(k,cur,o)=>`<div class="seg">${o.map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-${k}="${v}">${l}</button>`).join("")}</div>`;
   $("app").innerHTML=`<h1>Pengaturan</h1>
   <div class="card"><div class="rw"><div><b>Nama</b><div class="sm">${who?esc(who):"Belum diisi"}</div></div><button class="chip" id="pnm">Ganti</button></div></div>${SERVER?`
@@ -934,12 +985,14 @@ function pengaturanHome(){
   <div class="card"><b>Warna aplikasi</b>${seg("pt",th,[["auto","Otomatis"],["light","Terang"],["dark","Gelap"]])}
   <div style="margin-top:16px"><b>Gambar taman</b></div>${seg("pv",vis,[["pohon","Pohon"],["hewan","Hewan"],["peta","Peta"]])}</div>
   <div class="card"><b>Efek suara</b>${seg("ps",muted?"off":"on",[["on","Hidup"],["off","Mati"]])}</div>
+  <div class="card"><b>Mode anak</b><div class="sm">Huruf dan tombol di Latihan lebih besar, supaya nyaman dipakai anak.</div>${seg("pa",anak?"on":"off",[["off","Mati"],["on","Hidup"]])}</div>
   <div class="card"><b>Pemakaian offline</b><div class="sm">Simpan semua data surat dan audio agar kuis bisa dipakai tanpa internet.</div><button class="go" id="poff">Unduh untuk offline</button></div>
   <div class="card"><b>Tentang</b><div class="sm">Kuis Hafalan · versi ${VERSI}</div><a class="chip" href="kebijakan-privasi.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--t);margin-top:8px">Kebijakan privasi</a></div>${DW}`;
   document.querySelectorAll("[data-pt]").forEach(b=>b.onclick=()=>{const v=b.dataset.pt;if(v=="auto"){ls.set("tema","");delete document.documentElement.dataset.theme}else{ls.set("tema",v);document.documentElement.dataset.theme=v}pengaturanHome()});
   document.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{ls.set("vis:"+who,b.dataset.pv);pengaturanHome()});
   document.querySelectorAll("[data-ps]").forEach(b=>b.onclick=()=>{muted=b.dataset.ps=="off";ls.set("mute",muted?"1":"0");pengaturanHome()});
   $("pnm").onclick=()=>askName(false);
+  document.querySelectorAll("[data-pa]").forEach(b=>b.onclick=()=>{const on=b.dataset.pa=="on";ls.set("anak",on?"1":"0");document.body.classList.toggle("anak",on);pengaturanHome()});
   $("poff").onclick=async()=>{const b=$("poff");b.disabled=true;toast("Mengunduh…");try{await loadAll(R);toast("Tersimpan untuk dipakai offline")}catch(e){toast("Gagal mengunduh, coba lagi")}b.disabled=false};
 }
 

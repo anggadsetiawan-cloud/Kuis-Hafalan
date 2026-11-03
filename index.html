@@ -795,7 +795,7 @@ const Api={
 let stV="stat";
 const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
 const HALAQAH=true; // Halaqah memakai server
-const VERSI="1.2";
+const VERSI="1.2.1";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){
@@ -870,7 +870,7 @@ Object.assign(Api,{
   hqShare:(id,v)=>hqF(()=>{const d=hqLoad();hqG(d,id).share=!!v;hqSave(d)})
 });
 
-let rkV="global",hqOpen=null,hqMode="week",hqForm=null,hqPrev=null,hqErr="",hqCode="";
+let rkV="global",hqOpen=null,hqMode="week",hqForm=null,hqPrev=null,hqErr="",hqCode="",hqBusy=false;
 const rkSeg=()=>!HALAQAH?"":`<div class="seg">${[["global","Global"],["halaqah","Halaqah"]].map(([v,l])=>`<button class="chip ${rkV==v?"on":""}" data-rv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-rv]");if(b){rkV=b.dataset.rv;hqOpen=null;hqForm=null;rankHome()}});
 const DEMO=SERVER?"":`<div class="sm" style="background:var(--c2);border-radius:10px;padding:10px;margin-top:12px">Mode contoh: Halaqah dan anggotanya adalah data contoh yang tersimpan di HP ini sampai server aktif.</div>`;
@@ -905,7 +905,7 @@ async function hqHome(){
     return;
   }
   try{
-    if(hqForm=="join"&&hqCode&&!hqPrev)hqPrev=(await Api.hqPreview(hqCode))||{none:true};
+    if(hqForm=="join"&&hqCode)hqPrev=(await Api.hqPreview(hqCode))||{none:true};
     const html=hqOpen?hqDetailHTML(await Api.hqGet(hqOpen,hqMode)):hqListHTML(await Api.hqList());
     if(!$("rkb")||stV!="rank"||rkV!="halaqah")return;
     $("rkb").innerHTML=DEMO+html;$("rkb").onclick=hqClick;
@@ -917,7 +917,7 @@ async function hqHome(){
 async function hqClick(e){
   const b=e.target.closest("[data-ha]");if(!b)return;
   const a=b.dataset.ha,id=b.dataset.id,x=b.dataset.x;
-  const done=async f=>{try{await f()}catch(err){toast(err.message||"Gagal, coba lagi")}hqHome()};
+  const done=async f=>{if(hqBusy)return;hqBusy=true;try{await f()}catch(err){toast(err.message||"Gagal, coba lagi")}hqBusy=false;hqHome()};
   if(a=="retry")return hqHome();
   if(a=="open"){hqOpen=id;hqMode="week";return hqHome()}
   if(a=="back"){hqOpen=null;return hqHome()}

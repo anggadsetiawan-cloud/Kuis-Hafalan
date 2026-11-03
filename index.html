@@ -124,6 +124,9 @@ button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
 .anak .fbt{font-size:21px}
 .anak .go{min-height:56px;font-size:18px}
 @media (prefers-reduced-motion:reduce){.fbi svg{animation:none}}
+.av{width:28px;height:28px;border-radius:14px;background:var(--p);color:var(--pt);display:inline-flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex:none}
+.sg{position:fixed;left:12px;right:12px;bottom:calc(150px + env(safe-area-inset-bottom));max-width:536px;margin:0 auto;z-index:47;background:var(--c);border:1px solid var(--bd);border-radius:16px;padding:14px}
+.sg .chips{margin-top:8px}
 </style></head><body>
 <div id="nav"></div>
 <div id="app"></div>
@@ -281,7 +284,7 @@ function end(){
   const m=!ans?"Belum ada soal yang dikerjakan.":p>=90?"Masya Allah, tabarakallah!":p>=60?"Alhamdulillah, terus diulang ya.":"Tidak apa-apa, bismillah ulangi lagi pelan-pelan.",ns=!ans?0:p>=90?3:p>=60?2:1;
   $("app").innerHTML=`<h1>${who?esc(who)+" · ":""}Nilai ${p}</h1><div class="card" style="text-align:center"><div class="stars">${[1,2,3].map(n=>`<span class="${n<=ns?"on":""}">${I("star",40)}</span>`).join("")}</div><b>${score} benar dari ${ans} soal</b><div>${m}</div></div>${ans?`<div class="card" style="text-align:center"><p>${rnd(DOA)}</p><div class="ar" style="text-align:center;font-size:28px">رَبِّ زِدْنِي عِلْمًا</div><div class="sm">“Ya Rabbku, tambahkanlah ilmu kepadaku.”</div></div>`:""}
   <button class="go" id="again">Main lagi</button><button class="go" id="hm" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Ubah pilihan</button>`;
-  $("again").onclick=start;$("hm").onclick=()=>home();
+  $("again").onclick=start;$("hm").onclick=()=>home();setTimeout(saranLogin,800);
 }
 // ===== Susun urutan surat =====
 let tab="kuis",dir="asc",SU={},ac=null,hotEl=null;
@@ -299,7 +302,7 @@ function askName(first){
   ${first?"":`<button class="go" id="nmc" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Batal</button>`}</div>`;
   document.body.appendChild(o);
   $("nmi").value=first?"":who;
-  const save=()=>{const v=$("nmi").value.trim().slice(0,20);if(!v)return $("nmi").focus();who=v;ls.set("nama",v);o.remove();navBar();if(tab=="pengaturan")pengaturanHome()};
+  const save=()=>{const v=$("nmi").value.trim().slice(0,20);if(!v)return $("nmi").focus();who=v;ls.set("nama",v);profilTambah(v);o.remove();navBar();if(tab=="pengaturan")pengaturanHome()};
   $("nms").onclick=save;$("nmi").onkeydown=e=>{if(e.key=="Enter")save()};
   if(!first)$("nmc").onclick=()=>o.remove();
   $("nmi").focus();
@@ -467,6 +470,7 @@ function finish(){
 
 // ===== Ikon garis & komponen kecil =====
 const IC={
+chev:'<path d="M7 10l5 5 5-5"/>',
 x:'<path d="M6 6l12 12M18 6L6 18"/>',
 star:'<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.7 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/>',
 chart:'<path d="M5 20V11M12 20V5M19 20v-6"/>',
@@ -504,7 +508,7 @@ function dlg(msg,okLabel,fn){
   document.body.appendChild(o);
   $("dno").onclick=()=>o.remove();$("dok").onclick=()=>{o.remove();fn()};
 }
-const DW=`<div class="sm" style="margin:12px 0">Data tersimpan di HP ini. Jangan hapus data browser sebelum fitur akun tersedia.</div>`;
+const DW=`<div class="sm" style="margin:12px 0">Tanpa akun Google, datamu hanya tersimpan di HP ini. Hindari menghapus data browser, atau masuk dengan Google agar progresmu aman.</div>`;
 
 // ===== Target & Mutabaah, tahap 1: kondisi hafalan + target ziyadah =====
 const HAL=604,BAR=15,AYH=6236/604,HR=["Ahad","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
@@ -613,7 +617,7 @@ function targetHome(edit){
   ["tj","th","tg","tm","ts","td"].forEach(id=>{const e=$(id);if(e){e.oninput=pv;e.onchange=pv}});
   document.querySelectorAll("[data-tm]").forEach(b=>b.onclick=()=>{tgRead();TG.mode=b.dataset.tm;targetHome(true)});
   document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{const d=+b.dataset.r,i=TG.rest.indexOf(d);i<0?TG.rest.push(d):TG.rest.splice(i,1);b.classList.toggle("on",i<0);pv()});
-  $("tsv").onclick=()=>{tgRead();const p=tgPlan(TG);if(p.err||p.done)return pv();ls.set(tgKey(),JSON.stringify(TG));targetHome();toast("Target tersimpan ✓")};
+  $("tsv").onclick=()=>{tgRead();const p=tgPlan(TG);if(p.err||p.done)return pv();ls.set(tgKey(),JSON.stringify(TG));targetHome();toast("Target tersimpan ✓");syncAntri()};
   if($("tc"))$("tc").onclick=()=>targetHome();
   pv();
 }
@@ -760,7 +764,7 @@ function mutabaahHome(){
     else if(b.dataset.a)v+=+b.dataset.a;
     else v=(parseInt($(f+"h").value)||0)*BAR+(parseInt($(f+"b").value)||0);
     const prev=e[f]||0;e[f]=Math.max(0,Math.min(v,cap));mtSet(X);mutabaahHome();
-    if(e[f]!=prev)toast("Tersimpan ✓",()=>{const Y=mtGet(),r=Y[c.k]=Y[c.k]||{m:0,z:0};r[f]=prev;mtSet(Y);mutabaahHome()});
+    if(e[f]!=prev){toast("Tersimpan ✓",()=>{const Y=mtGet(),r=Y[c.k]=Y[c.k]||{m:0,z:0};r[f]=prev;mtSet(Y);mutabaahHome();syncAntri()});syncAntri();setTimeout(saranLogin,1500)}
   });
 }
 
@@ -789,8 +793,9 @@ const Api={
 
 // ===== Peringkat (di dalam tab Statistik) =====
 let stV="stat";
-const SERVER=false; // ubah ke true setelah server aktif (membuka Peringkat dan Halaqah)
-const VERSI="1.0";
+const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
+const HALAQAH=false; // ubah ke true setelah server Halaqah siap
+const VERSI="1.1";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){
@@ -799,22 +804,30 @@ function rkRow(r){
 }
 function rkHTML(d,share){
   const m=d.me,inTop=d.top.some(x=>x.me);
-  return`<div class="sm" style="background:var(--c2);border-radius:10px;padding:10px;margin-top:12px">Mode contoh: peringkat lain memakai data contoh sampai server aktif. Hanya skormu yang nyata.</div>
+  return`${SERVER?"":`<div class="sm" style="background:var(--c2);border-radius:10px;padding:10px;margin-top:12px">Mode contoh: peringkat lain memakai data contoh sampai server aktif. Hanya skormu yang nyata.</div>`}
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">${[["Skor kamu",m.score+" / 30"],["Peringkat","#"+m.rank+" dari "+d.total],["Beruntun",m.streak+" hari"]].map(([a,b])=>`<div style="background:var(--c2);border-radius:12px;padding:12px"><div class="sm">${a}</div><div style="font-size:15px;font-weight:600">${b}</div></div>`).join("")}</div>
   <div class="card"><b>Peringkat global</b><div class="sm">Skor = jumlah hari terpenuhi dalam 30 hari terakhir. Jika sama, dilihat dari beruntun lalu total hari terpenuhi.</div><div style="margin-top:8px">${d.top.map(rkRow).join("")}${inTop?"":`<div class="sm" style="text-align:center;padding:4px">···</div>`+rkRow({rank:m.rank,name:who,score:m.score,hidden:m.hidden,me:true})}</div></div>
   <div class="card"><b>Tampilkan namaku</b><div class="sm">Jika Tampil, orang lain bisa melihat namamu di peringkat. Jika Sembunyi, kamu tetap bisa melihat peringkatmu sendiri.</div><div class="seg"><button class="chip ${share?"on":""}" data-rks="1">Tampil</button><button class="chip ${share?"":"on"}" data-rks="0">Sembunyi</button></div></div>${DW}`;
 }
 async function rankHome(){
-  if(rkV=="halaqah")return hqHome();
-  const share=ls.get("rk:share:"+who)=="1";
+  if(HALAQAH&&rkV=="halaqah")return hqHome();
   $("app").innerHTML=`<h1>Statistik</h1>${stSeg()}${rkSeg()}<div id="rkb"><div class="card sm">Memuat peringkat…</div></div>`;
+  if(SERVER&&!glGet(who)){
+    $("rkb").innerHTML=`<div class="card"><b>Ikut peringkat</b><div class="sm" style="margin-top:6px">Masuk dengan Google untuk menyimpan progres ke akun dan melihat peringkatmu. Namamu tidak tampil ke orang lain kecuali kamu memilih Tampil.</div><button class="go" id="rkl">Masuk dengan Google</button></div>${DW}`;
+    $("rkl").onclick=()=>loginGoogle("link");
+    return;
+  }
   try{
     const d=await Api.globalBoard();if(!$("rkb")||stV!="rank")return;
+    const share=SERVER?!d.me.hidden:ls.get("rk:share:"+who)=="1";
     $("rkb").innerHTML=rkHTML(d,share);
-    document.querySelectorAll("[data-rks]").forEach(b=>b.onclick=()=>{ls.set("rk:share:"+who,b.dataset.rks);rankHome()});
+    document.querySelectorAll("[data-rks]").forEach(b=>b.onclick=()=>{
+      if(SERVER)api("/me",{method:"PATCH",body:{share_global:b.dataset.rks=="1"}}).then(()=>rankHome()).catch(e=>toast(e.message));
+      else{ls.set("rk:share:"+who,b.dataset.rks);rankHome()}
+    });
   }catch(e){
     if(!$("rkb"))return;
-    $("rkb").innerHTML=`<div class="card"><div>Peringkat belum bisa dimuat.</div><button class="go" id="rkr">Coba lagi</button></div>`;
+    $("rkb").innerHTML=`<div class="card"><div>${esc(e.message&&e.message!="belum_masuk"?e.message:"Peringkat belum bisa dimuat.")}</div><button class="go" id="rkr">Coba lagi</button></div>`;
     $("rkr").onclick=rankHome;
   }
 }
@@ -858,7 +871,7 @@ Object.assign(Api,{
 });
 
 let rkV="global",hqOpen=null,hqMode="week",hqForm=null,hqPrev=null,hqErr="",hqCode="";
-const rkSeg=()=>`<div class="seg">${[["global","Global"],["halaqah","Halaqah"]].map(([v,l])=>`<button class="chip ${rkV==v?"on":""}" data-rv="${v}">${l}</button>`).join("")}</div>`;
+const rkSeg=()=>!HALAQAH?"":`<div class="seg">${[["global","Global"],["halaqah","Halaqah"]].map(([v,l])=>`<button class="chip ${rkV==v?"on":""}" data-rv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-rv]");if(b){rkV=b.dataset.rv;hqOpen=null;hqForm=null;rankHome()}});
 const DEMO=`<div class="sm" style="background:var(--c2);border-radius:10px;padding:10px;margin-top:12px">Mode contoh: Halaqah dan anggotanya adalah data contoh yang tersimpan di HP ini sampai server aktif.</div>`;
 const hqRow=(r,key)=>{const nm=r.me?(r.hidden?"Kamu (tidak ditampilkan)":esc(r.name)+" (kamu)"):r.hidden?"Anggota tersembunyi":esc(r.name);return`<div class="rw rk${r.me?" me":""}"><span class="rkn">${r.rank}</span><span class="rkt">${nm}${r.own?' <span class="sm">· Ketua</span>':""}</span><b>${r[key]}${key=="week"?"/7":"/30"}</b></div>`};
@@ -920,6 +933,176 @@ async function hqClick(e){
   if(a=="del")return dlg("Hapus Halaqah ini? Tindakan ini tidak bisa dibatalkan.","Hapus",()=>done(async()=>{await Api.hqLeave(hqOpen);hqOpen=null;toast("Halaqah dihapus")}));
 }
 
+// ===== Akun Google, profil, dan sinkron =====
+const API_BASE="https://kuis-api.hafalanku.web.id/api",GOOGLE_CLIENT_ID="900783883264-ehjcehnnmmi74i0l1nrmgidrvbiacdmn.apps.googleusercontent.com";
+const profilList=()=>{try{const a=JSON.parse(ls.get("profil")||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}};
+const profilTambah=n=>{const a=profilList();if(n&&!a.includes(n)){a.push(n);ls.set("profil",JSON.stringify(a))}};
+const glGet=n=>{try{return JSON.parse(ls.get("gl:"+n)||"null")}catch(e){return null}};
+const glSet=(n,o)=>ls.set("gl:"+n,o?JSON.stringify(o):"");
+if(who)profilTambah(who);
+
+async function apiRaw(path,o,nama){
+  o=o||{};
+  const h={Accept:"application/json"};
+  if(o.body)h["Content-Type"]="application/json";
+  if(o.token)h.Authorization="Bearer "+o.token;
+  let res;
+  try{res=await fetch(API_BASE+path,{method:o.method||"GET",headers:h,body:o.body?JSON.stringify(o.body):undefined})}
+  catch(e){throw new Error("Tidak ada koneksi ke server.")}
+  let j=null;try{j=await res.json()}catch(e){}
+  if(res.status==401&&o.token&&nama){glSet(nama,null);navBar();throw new Error("Sesi berakhir, silakan masuk lagi.")}
+  if(!res.ok)throw new Error((j&&j.error&&j.error.message)||"Terjadi kesalahan ("+res.status+").");
+  return j;
+}
+const api=(path,o)=>{const g=glGet(who);return apiRaw(path,Object.assign({},o,{token:g&&g.token}),who)};
+{const demo=Api.globalBoard.bind(Api);Api.globalBoard=async()=>{if(!SERVER)return demo();if(!glGet(who))throw new Error("belum_masuk");return api("/rank/global")}}
+
+// --- Google Identity Services ---
+let gsiP=null;
+const gsiMuat=()=>gsiP||(gsiP=new Promise((ok,no)=>{
+  if(window.google&&google.accounts&&google.accounts.id)return ok();
+  const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.async=true;
+  s.onload=()=>ok();s.onerror=()=>{gsiP=null;no(new Error("gsi"))};document.head.appendChild(s);
+}));
+function loginGoogle(mode){
+  if(mode=="link"&&(!who||glGet(who)))mode="add";
+  const o=document.createElement("div");o.className="ov";
+  o.innerHTML=`<div class="pop"><h1>Masuk dengan Google</h1><div class="sm">${mode=="link"?"Simpan progres profil <b>"+esc(who)+"</b> ke akun Google, supaya aman dan bisa ikut peringkat.":"Tambahkan akun Google sebagai profil baru."}</div><div id="gbtn" style="display:flex;justify-content:center;margin:16px 0;min-height:44px"></div><div class="sm" id="gmsg"></div><button class="go" id="gx" style="${ghost}">Batal</button></div>`;
+  document.body.appendChild(o);
+  $("gx").onclick=()=>o.remove();
+  gsiMuat().then(()=>{
+    google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:r=>gCallback(r,mode,o)});
+    google.accounts.id.renderButton($("gbtn"),{theme:"outline",size:"large",text:"signin_with",shape:"pill",locale:"id",width:260});
+  }).catch(()=>{$("gmsg").textContent="Tidak bisa memuat Google. Periksa internet, atau buka aplikasi ini di Chrome."});
+}
+async function gCallback(resp,mode,o){
+  $("gmsg").textContent="Memeriksa…";
+  try{
+    const r=await apiRaw("/auth/google",{method:"POST",body:{id_token:resp.credential}});
+    o.remove();
+    await akunMasuk(r,mode);
+  }catch(e){$("gmsg").textContent=e.message||"Gagal masuk, coba lagi."}
+}
+async function akunMasuk(r,mode){
+  const u=r.user,rec={token:r.token,uid:u.id,email:u.email,nama:u.name};
+  const ada=profilList().find(n=>{const g=glGet(n);return g&&g.uid===u.id});
+  if(ada){glSet(ada,rec);toast("Masuk sebagai "+ada);if(ada!=who)gantiProfil(ada);else{navBar();syncMulai()}return}
+  if(mode=="link"&&who&&!glGet(who)){
+    glSet(who,rec);toast("Terhubung ke akun Google");navBar();
+    await syncMigrasi();
+    if(tab=="pengaturan")pengaturanHome();else if(tab=="statistik")statsHome();
+    return;
+  }
+  const dasar=(u.name||"Pengguna").slice(0,17),a=profilList();let n=dasar.slice(0,20),k=2;
+  while(a.includes(n))n=dasar+" "+k++;
+  profilTambah(n);glSet(n,rec);toast("Akun ditambahkan");gantiProfil(n);
+}
+function gantiProfil(n){
+  who=n;ls.set("nama",n);TG=null;mtOff=0;hqOpen=null;
+  navBar();route();syncMulai();
+}
+
+// --- Profil: header, daftar, tambah ---
+function akunChip(){
+  if(!who)return"";
+  const g=glGet(who);
+  return`<div class="hd"><button class="gh" id="acc" aria-label="Profil dan akun"><span class="av">${esc(who.charAt(0).toUpperCase())}</span><span>${esc(who)}</span>${I("chev",16)}${g?`<span style="display:inline-flex;color:var(--okt)" title="Terhubung ke Google">${I("check",14)}</span>`:""}</button></div>`;
+}
+function akunSheet(){
+  const a=profilList(),g=glGet(who),o=document.createElement("div");o.className="ov";
+  o.innerHTML=`<div class="pop" style="text-align:left"><b style="font-size:19px">Profil dan akun</b>
+  <div class="sm" style="margin:6px 0 10px">Satu profil untuk tiap orang (misalnya tiap anak). Akun Google menyimpan progres ke server dan dipakai untuk peringkat.</div>
+  ${a.map((n,i)=>{const x=glGet(n);return`<button class="rw" data-sw="${i}" style="width:100%;background:none;border:0;border-top:1px solid var(--bd);text-align:left;padding:8px 0"><span style="display:flex;align-items:center;gap:10px;min-width:0"><span class="av">${esc(n.charAt(0).toUpperCase())}</span><span style="min-width:0"><b>${esc(n)}</b><div class="sm">${x?"Google: "+esc(x.email||""):"Hanya di HP ini"}</div></span></span>${n==who?em("✅","selesai"):""}</button>`}).join("")}
+  <button class="go" id="ap">Tambah profil (tanpa login)</button>
+  ${SERVER?`<button class="go" id="ag" style="${ghost}">Tambah akun Google</button>`:""}
+  ${SERVER&&g?`<button class="go" id="ako" style="${ghost}">Keluar dari akun Google profil ini</button>`:""}
+  <button class="go" id="atp" style="${ghost}">Tutup</button></div>`;
+  document.body.appendChild(o);
+  o.querySelectorAll("[data-sw]").forEach(b=>b.onclick=()=>{const n=a[+b.dataset.sw];o.remove();if(n!=who)gantiProfil(n)});
+  $("ap").onclick=()=>{o.remove();tambahProfil()};
+  if($("ag"))$("ag").onclick=()=>{o.remove();loginGoogle("add")};
+  if($("ako"))$("ako").onclick=()=>{o.remove();dlg("Keluar dari akun Google untuk profil ini? Data di HP tetap ada.","Keluar",async()=>{try{await api("/auth/logout",{method:"POST"})}catch(e){}glSet(who,null);navBar();route();toast("Keluar dari akun Google")})};
+  $("atp").onclick=()=>o.remove();
+}
+function tambahProfil(){
+  const o=document.createElement("div");o.className="ov";
+  o.innerHTML=`<div class="pop"><h1>Profil baru</h1><div class="sm">Nama untuk profil ini (misalnya nama anak). Datanya terpisah dari profil lain.</div><input id="tpn" class="sel" maxlength="20" placeholder="Contoh: Fulan"><div class="sm" id="tpm" style="color:var(--no)"></div><button class="go" id="tps">Simpan</button><button class="go" id="tpc" style="${ghost}">Batal</button></div>`;
+  document.body.appendChild(o);$("tpn").focus();
+  const simpan=()=>{const v=$("tpn").value.trim().slice(0,20);if(!v)return $("tpn").focus();if(profilList().includes(v)){$("tpm").textContent="Nama itu sudah dipakai profil lain.";return}profilTambah(v);o.remove();gantiProfil(v)};
+  $("tps").onclick=simpan;$("tpn").onkeydown=e=>{if(e.key=="Enter")simpan()};$("tpc").onclick=()=>o.remove();
+}
+function hapusAkunServer(){
+  dlg("Hapus akun Google ini beserta datanya di server? Data di HP tetap ada.","Hapus",async()=>{
+    try{await api("/me",{method:"DELETE"});glSet(who,null);navBar();if(tab=="pengaturan")pengaturanHome();toast("Akun di server dihapus")}
+    catch(e){toast(e.message)}
+  });
+}
+
+// --- Sinkron ---
+const lim=(v,m)=>Math.max(0,Math.min(m,Math.round(+v||0)));
+const awalJendela=()=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-2);return iso(d)};
+function logLokal(){
+  const t=tgGet(),L=mtGet();if(!t)return[];
+  const pl=tgPlan(t),r=[];
+  for(const k of Object.keys(L).sort()){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k))continue;
+    const c=mtCtx(t,L,dparse(k),pl),e=L[k];
+    r.push({date:k,m:lim(e.m,1500),z:lim(e.z,900),mt:lim(c.mt,1500),zt:lim(c.zt,900)});
+  }
+  return r;
+}
+async function syncMigrasi(){
+  if(!SERVER||!glGet(who))return;
+  try{
+    const t=tgGet(),rows=logLokal(),aw=awalJendela();
+    const lama=rows.filter(r=>r.date<aw).slice(-400),baru=rows.filter(r=>r.date>=aw);
+    if(t||lama.length)await api("/migrate",{method:"POST",body:{target:t||undefined,logs:lama}});
+    if(baru.length)await api("/sync/logs",{method:"PUT",body:{logs:baru}});
+    if(t)await api("/sync/target",{method:"PUT",body:{json:t}});
+    toast("Progres tersimpan di akun Google");
+  }catch(e){toast("Penyimpanan ke akun tertunda: "+e.message)}
+}
+let syT=null;
+function syncAntri(){if(!SERVER||!glGet(who))return;clearTimeout(syT);syT=setTimeout(syncKirim,1500)}
+async function syncKirim(){
+  if(!SERVER||!glGet(who)||(typeof navigator!="undefined"&&navigator.onLine===false))return;
+  const t=tgGet();if(!t)return;
+  try{
+    const aw=awalJendela(),rows=logLokal().filter(r=>r.date>=aw);
+    if(rows.length)await api("/sync/logs",{method:"PUT",body:{logs:rows}});
+    await api("/sync/target",{method:"PUT",body:{json:t}});
+  }catch(e){}
+}
+async function syncMulai(){
+  if(!SERVER||!glGet(who)||(typeof navigator!="undefined"&&navigator.onLine===false))return;
+  try{
+    const d=await api("/sync");
+    const L=mtGet();let ubah=false;
+    for(const r of d.logs||[]){if(!L[r.date]){L[r.date]={m:r.m,z:r.z};ubah=true}}
+    if(ubah)mtSet(L);
+    if(d.target&&!tgGet()){ls.set(tgKey(),JSON.stringify(Object.assign({},d.target,{w:who})));ubah=true}
+    if(ubah){TG=null;if(["mutabaah","target","statistik"].includes(tab))route()}
+    await syncKirim();
+  }catch(e){}
+}
+
+// --- Saran masuk (tidak wajib, bisa ditutup) ---
+function saranLogin(){
+  if(!SERVER||!who||glGet(who)||ls.get("saran:off")=="1")return;
+  if(document.querySelector(".sg"))return;
+  const now=Date.now(),last=+ls.get("saran:t")||0;
+  if(now-last<10*60*1000)return;
+  ls.set("saran:t",String(now));
+  const e=document.createElement("div");e.className="sg";e.setAttribute("role","status");
+  e.innerHTML=`<b>Sayang kalau progresmu tidak tersimpan</b><div class="sm">Masuk dengan Google untuk menyimpannya di akun dan ikut peringkat. Tidak wajib.</div><div class="chips"><button class="chip on" id="sgy">Masuk dengan Google</button><button class="chip" id="sgn">Nanti saja</button></div><button id="sgo" style="background:none;border:0;padding:6px 0;color:var(--t2);text-decoration:underline;font-size:13px">Jangan ingatkan lagi</button>`;
+  document.body.appendChild(e);
+  const tutup=()=>e.remove();
+  $("sgy").onclick=()=>{tutup();loginGoogle("link")};
+  $("sgn").onclick=tutup;
+  $("sgo").onclick=()=>{ls.set("saran:off","1");tutup()};
+  setTimeout(tutup,20000);
+}
+
 // ===== Tahap C: Latihan, Statistik, Pengaturan =====
 {const th=ls.get("tema");if(th)document.documentElement.dataset.theme=th;if(ls.get("anak")=="1")document.body.classList.add("anak")}
 const latSeg=cur=>`<div class="seg">${[["kuis","Kuis"],["susun","Susun urutan"]].map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-lat="${v}">${l}</button>`).join("")}</div>`;
@@ -928,7 +1111,7 @@ const route=()=>tab=="kuis"?home():tab=="susun"?susunHome():tab=="target"?target
 function navBar(){
   const lat=tab=="kuis"||tab=="susun";
   $("tabs").innerHTML=[["mutabaah","check","Hari ini"],["kuis","quiz","Latihan"],["statistik","chart","Statistik"],["target","target","Target"],["pengaturan","gear","Pengaturan"]].map(([t,i,l])=>{const on=t=="kuis"?lat:tab==t;return`<button class="tb ${on?"on":""}" data-tab="${t}" ${on?'aria-current="page"':""}>${I(i)}<span>${l}</span></button>`}).join("");
-  $("nav").innerHTML="";
+  $("nav").innerHTML=akunChip();if($("acc"))$("acc").onclick=akunSheet;
   document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab=="kuis"&&tab=="susun"?"susun":b.dataset.tab;au.pause();navBar();route()});
 }
 
@@ -977,21 +1160,20 @@ function statsHome(){
 }
 
 function pengaturanHome(){
-  const th=ls.get("tema")||"auto",vis=ls.get("vis:"+who)||"pohon",anak=ls.get("anak")=="1";
+  const th=ls.get("tema")||"auto",vis=ls.get("vis:"+who)||"pohon",anak=ls.get("anak")=="1",gl=glGet(who);
   const seg=(k,cur,o)=>`<div class="seg">${o.map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-${k}="${v}">${l}</button>`).join("")}</div>`;
   $("app").innerHTML=`<h1>Pengaturan</h1>
-  <div class="card"><div class="rw"><div><b>Nama</b><div class="sm">${who?esc(who):"Belum diisi"}</div></div><button class="chip" id="pnm">Ganti</button></div></div>${SERVER?`
-  <div class="card"><b>Akun</b><div class="sm">Masuk dengan Google untuk sinkron antar-HP dan ikut peringkat sungguhan. Tersedia setelah server aktif.</div><button class="go" disabled>Masuk dengan Google</button></div>`:""}
+  <div class="card"><div class="rw"><div><b>Profil</b><div class="sm">${who?esc(who):"Belum diisi"} · ${gl?"Google: "+esc(gl.email||""):"Hanya di HP ini"}</div></div><button class="chip" id="pak">Kelola</button></div>${SERVER?(gl?`<div class="sm" style="margin-top:8px">Progresmu tersinkron ke akun Google.</div><button class="chip" id="phs" style="margin-top:8px">Hapus akun di server</button>`:`<div class="sm" style="margin-top:8px">Masuk dengan Google untuk menyimpan progres, pindah HP dengan aman, dan ikut peringkat.</div><button class="go" id="pgl">Masuk dengan Google</button>`):""}</div>
   <div class="card"><b>Warna aplikasi</b>${seg("pt",th,[["auto","Otomatis"],["light","Terang"],["dark","Gelap"]])}
   <div style="margin-top:16px"><b>Gambar taman</b></div>${seg("pv",vis,[["pohon","Pohon"],["hewan","Hewan"],["peta","Peta"]])}</div>
   <div class="card"><b>Efek suara</b>${seg("ps",muted?"off":"on",[["on","Hidup"],["off","Mati"]])}</div>
   <div class="card"><b>Mode anak</b><div class="sm">Huruf dan tombol di Latihan lebih besar, supaya nyaman dipakai anak.</div>${seg("pa",anak?"on":"off",[["off","Mati"],["on","Hidup"]])}</div>
   <div class="card"><b>Pemakaian offline</b><div class="sm">Simpan semua data surat dan audio agar kuis bisa dipakai tanpa internet.</div><button class="go" id="poff">Unduh untuk offline</button></div>
-  <div class="card"><b>Tentang</b><div class="sm">Kuis Hafalan · versi ${VERSI}</div><a class="chip" href="kebijakan-privasi.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--t);margin-top:8px">Kebijakan privasi</a></div>${DW}`;
+  <div class="card"><b>Tentang</b><div class="sm">Kuis Hafalan · versi ${VERSI}</div><a class="chip" href="kebijakan-privasi.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--t);margin-top:8px">Kebijakan privasi</a> <a class="chip" href="syarat-ketentuan.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--t);margin-top:8px">Syarat penggunaan</a></div>${DW}`;
   document.querySelectorAll("[data-pt]").forEach(b=>b.onclick=()=>{const v=b.dataset.pt;if(v=="auto"){ls.set("tema","");delete document.documentElement.dataset.theme}else{ls.set("tema",v);document.documentElement.dataset.theme=v}pengaturanHome()});
   document.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{ls.set("vis:"+who,b.dataset.pv);pengaturanHome()});
   document.querySelectorAll("[data-ps]").forEach(b=>b.onclick=()=>{muted=b.dataset.ps=="off";ls.set("mute",muted?"1":"0");pengaturanHome()});
-  $("pnm").onclick=()=>askName(false);
+  $("pak").onclick=akunSheet;if($("pgl"))$("pgl").onclick=()=>loginGoogle("link");if($("phs"))$("phs").onclick=hapusAkunServer;
   document.querySelectorAll("[data-pa]").forEach(b=>b.onclick=()=>{const on=b.dataset.pa=="on";ls.set("anak",on?"1":"0");document.body.classList.toggle("anak",on);pengaturanHome()});
   $("poff").onclick=async()=>{const b=$("poff");b.disabled=true;toast("Mengunduh…");try{await loadAll(R);toast("Tersimpan untuk dipakai offline")}catch(e){toast("Gagal mengunduh, coba lagi")}b.disabled=false};
 }
@@ -1005,12 +1187,13 @@ function pengaturanHome(){
   }
   if(["asc","desc","auto"].includes(q.get("dir")))dir=q.get("dir");
   if(q.get("tab")=="susun")tab="susun";if(q.get("tab")=="target")tab="target";if(q.get("tab")=="mutabaah")tab="mutabaah";
-  if(SERVER&&q.get("halaqah")){tab="statistik";stV="rank";rkV="halaqah";hqForm="join";hqCode=q.get("halaqah").toUpperCase().slice(0,12)}
+  if(SERVER&&HALAQAH&&q.get("halaqah")){tab="statistik";stV="rank";rkV="halaqah";hqForm="join";hqCode=q.get("halaqah").toUpperCase().slice(0,12)}
   if(![...q.keys()].length&&who&&tgGet())tab="mutabaah";
   if(q.get("nonum")=="1")hideNo=true;
   if(q.get("sulit")=="1")hard=true;
   const j=q.get("jenis");if(j){const x=j.split(",").filter(y=>TY[y]);if(x.length)types=new Set(x)}
 })();
 navBar();route();if(!who)askName(true);
+syncMulai();window.addEventListener("online",()=>syncMulai());
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script></body></html>

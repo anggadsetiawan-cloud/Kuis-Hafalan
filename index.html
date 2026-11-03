@@ -794,8 +794,8 @@ const Api={
 // ===== Peringkat (di dalam tab Statistik) =====
 let stV="stat";
 const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
-const HALAQAH=false; // ubah ke true setelah server Halaqah siap
-const VERSI="1.1";
+const HALAQAH=true; // Halaqah memakai server
+const VERSI="1.2";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){
@@ -873,7 +873,7 @@ Object.assign(Api,{
 let rkV="global",hqOpen=null,hqMode="week",hqForm=null,hqPrev=null,hqErr="",hqCode="";
 const rkSeg=()=>!HALAQAH?"":`<div class="seg">${[["global","Global"],["halaqah","Halaqah"]].map(([v,l])=>`<button class="chip ${rkV==v?"on":""}" data-rv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-rv]");if(b){rkV=b.dataset.rv;hqOpen=null;hqForm=null;rankHome()}});
-const DEMO=`<div class="sm" style="background:var(--c2);border-radius:10px;padding:10px;margin-top:12px">Mode contoh: Halaqah dan anggotanya adalah data contoh yang tersimpan di HP ini sampai server aktif.</div>`;
+const DEMO=SERVER?"":`<div class="sm" style="background:var(--c2);border-radius:10px;padding:10px;margin-top:12px">Mode contoh: Halaqah dan anggotanya adalah data contoh yang tersimpan di HP ini sampai server aktif.</div>`;
 const hqRow=(r,key)=>{const nm=r.me?(r.hidden?"Kamu (tidak ditampilkan)":esc(r.name)+" (kamu)"):r.hidden?"Anggota tersembunyi":esc(r.name);return`<div class="rw rk${r.me?" me":""}"><span class="rkn">${r.rank}</span><span class="rkt">${nm}${r.own?' <span class="sm">· Ketua</span>':""}</span><b>${r[key]}${key=="week"?"/7":"/30"}</b></div>`};
 const ghost="background:var(--c);color:var(--t);border:1px solid var(--bd)";
 
@@ -881,24 +881,29 @@ function hqListHTML(d){
   const c=d.canCreate,p=hqPrev;
   const inbox=d.inbox.length?`<div class="card"><b>Undangan</b>${d.inbox.map(i=>`<div style="margin-top:12px"><div>${esc(i.by)} mengundangmu ke <b>${esc(i.name)}</b></div><div class="sm">${i.count} anggota</div><div class="chips"><button class="chip on" data-ha="accept" data-id="${i.id}">Terima</button><button class="chip" data-ha="decline" data-id="${i.id}">Tolak</button><button class="chip" data-ha="block" data-id="${i.id}">Tolak dan blokir</button></div></div>`).join("")}</div>`:"";
   const mine=`<div class="card"><b>Halaqah-ku</b>${d.mine.length?d.mine.map(g=>`<button class="rw" data-ha="open" data-id="${g.id}" style="width:100%;background:none;border:0;border-top:1px solid var(--bd);text-align:left;padding:8px 0;margin-top:8px"><span><b>${esc(g.name)}</b><div class="sm">${g.role} · ${g.count} anggota</div></span><span class="sm">Buka</span></button>`).join(""):`<div class="sm" style="margin-top:6px">Kamu belum bergabung dengan Halaqah.</div>`}</div>`;
-  const cf=hqForm=="create"?`<div class="card"><b>Buat Halaqah</b><div class="sm">Syarat membuat Halaqah, supaya kelompok berisi orang yang konsisten:</div>${c.reasons.map(r=>`<div class="rw" style="min-height:32px;justify-content:flex-start"><span style="color:${r.ok?"var(--okt)":"var(--no)"};display:inline-flex">${I(r.ok?"check":"lock",18)}</span><span class="sm" style="color:var(--t)">${r.label}</span></div>`).join("")}<input id="hqn" class="sel" maxlength="30" placeholder="Nama Halaqah" ${c.ok?"":"disabled"}>${hqErr?`<div class="sm" style="color:var(--no);margin-top:4px">${hqErr}</div>`:""}<button class="go" data-ha="create" ${c.ok?"":"disabled"}>Buat Halaqah</button><div class="chips"><button class="chip ${d.skip?"on":""}" data-ha="skip">Lewati syarat (hanya contoh)</button></div></div>`:"";
+  const cf=hqForm=="create"?`<div class="card"><b>Buat Halaqah</b><div class="sm">Syarat membuat Halaqah, supaya kelompok berisi orang yang konsisten:</div>${c.reasons.map(r=>`<div class="rw" style="min-height:32px;justify-content:flex-start"><span style="color:${r.ok?"var(--okt)":"var(--no)"};display:inline-flex">${I(r.ok?"check":"lock",18)}</span><span class="sm" style="color:var(--t)">${r.label}</span></div>`).join("")}<input id="hqn" class="sel" maxlength="30" placeholder="Nama Halaqah" ${c.ok?"":"disabled"}>${hqErr?`<div class="sm" style="color:var(--no);margin-top:4px">${hqErr}</div>`:""}<button class="go" data-ha="create" ${c.ok?"":"disabled"}>Buat Halaqah</button>${SERVER?"":`<div class="chips"><button class="chip ${d.skip?"on":""}" data-ha="skip">Lewati syarat (hanya contoh)</button></div>`}</div>`:"";
   const pv=p?(p.none?`<div class="sm" style="color:var(--no);margin-top:8px">Kode tidak ditemukan atau sudah kedaluwarsa.</div>`:p.already?`<div class="sm" style="margin-top:8px">Kamu sudah menjadi anggota ${esc(p.name)}.</div>`:`<div style="margin-top:12px">${esc(p.by)} mengundangmu ke <b>${esc(p.name)}</b><div class="sm">${p.count} anggota</div><div class="chips"><button class="chip on" data-ha="join" data-id="${p.id}">Terima</button><button class="chip" data-ha="form" data-id="join">Tolak</button></div></div>`):"";
-  const jf=hqForm=="join"?`<div class="card"><b>Gabung dengan kode</b><div class="sm">Coba kode contoh: DEMO42</div><input id="hqc" class="sel" maxlength="12" placeholder="Kode undangan" value="${esc(hqCode)}"><button class="go" data-ha="check">Cek kode</button>${hqErr?`<div class="sm" style="color:var(--no);margin-top:4px">${hqErr}</div>`:""}${pv}</div>`:"";
+  const jf=hqForm=="join"?`<div class="card"><b>Gabung dengan kode</b><div class="sm">${SERVER?"Masukkan kode dari ketua Halaqah.":"Coba kode contoh: DEMO42"}</div><input id="hqc" class="sel" maxlength="12" placeholder="Kode undangan" value="${esc(hqCode)}"><button class="go" data-ha="check">Cek kode</button>${hqErr?`<div class="sm" style="color:var(--no);margin-top:4px">${hqErr}</div>`:""}${pv}</div>`:"";
   return inbox+mine+`<button class="go" data-ha="form" data-id="create">Buat Halaqah</button><button class="go" data-ha="form" data-id="join" style="${ghost}">Gabung dengan kode</button>`+cf+jf;
 }
 function hqDetailHTML(g){
   const key=hqMode=="week"?"week":"score",own=g.role=="Ketua",alone=own&&g.count==1,pct=Math.min(100,Math.round(g.done/g.goal*100));
   const ketua=own?`<div class="card"><b>Undang anggota</b><div class="sm">Bagikan kode atau link lewat WhatsApp. Penerima harus menerima dulu sebelum masuk.</div><div style="font-size:22px;font-weight:600;letter-spacing:.12em;margin-top:8px">${g.code}</div><div class="chips"><button class="chip" data-ha="copy" data-x="${g.code}">Salin link</button><button class="chip" data-ha="newcode">Kode baru</button></div></div>
-  <div class="card"><details><summary style="cursor:pointer;padding:8px 0;font-weight:600">Kelola anggota</summary>${g.members.filter(r=>!r.me).map(r=>`<div style="padding:8px 0;border-top:1px solid var(--bd)"><div>${esc(r.name)}</div><div class="chips"><button class="chip" data-ha="transfer" data-id="${r.id}">Jadikan ketua</button><button class="chip" data-ha="kick" data-id="${r.id}">Keluarkan</button></div></div>`).join("")||'<div class="sm">Belum ada anggota lain.</div>'}</details></div>`:"";
+  <div class="card"><details><summary style="cursor:pointer;padding:8px 0;font-weight:600">Kelola anggota</summary>${g.members.filter(r=>!r.me).map(r=>`<div style="padding:8px 0;border-top:1px solid var(--bd)"><div>${esc(r.name)}${r.hidden?` <span class="sm">· peringkat ${r.rank}</span>`:""}</div><div class="chips"><button class="chip" data-ha="transfer" data-id="${r.id}">Jadikan ketua</button><button class="chip" data-ha="kick" data-id="${r.id}">Keluarkan</button></div></div>`).join("")||'<div class="sm">Belum ada anggota lain.</div>'}</details></div>`:"";
   return`<div style="margin-top:12px"><button class="chip" data-ha="back">Kembali</button></div>
   <h1 style="margin-top:12px">${esc(g.name)}</h1><div class="sm">${g.count} anggota · Kamu: ${g.role}</div>
   <div class="card"><b>Target bersama pekan ini</b><div class="sm">${g.done} dari ${g.goal} hari terpenuhi (target 5 hari per anggota)</div><div style="height:10px;border-radius:6px;background:var(--bd);overflow:hidden;margin-top:8px"><div style="height:100%;width:${pct}%;background:var(--ok)"></div></div></div>
-  <div class="card"><b>Peringkat</b><div class="seg"><button class="chip ${hqMode=="week"?"on":""}" data-ha="mode" data-id="week">Pekan ini</button><button class="chip ${hqMode=="30"?"on":""}" data-ha="mode" data-id="30">30 hari</button></div><div style="margin-top:8px">${g.members.map(r=>hqRow(r,key)).join("")}</div><div class="sm" style="margin-top:8px">Skor = jumlah hari terpenuhi. Peringkat pekan ini dihitung ulang tiap pekan.</div></div>
+  <div class="card"><b>Peringkat</b><div class="seg"><button class="chip ${hqMode=="week"?"on":""}" data-ha="mode" data-id="week">Pekan ini</button><button class="chip ${hqMode=="30"?"on":""}" data-ha="mode" data-id="30">30 hari</button></div><div style="margin-top:8px">${g.members.map(r=>hqRow(r,key)).join("")}</div><div class="sm" style="margin-top:8px">Skor = jumlah hari terpenuhi. Pekan ini = 7 hari terakhir.</div></div>
   <div class="card"><b>Tampilkan namaku di Halaqah ini</b><div class="seg"><button class="chip ${g.share?"on":""}" data-ha="share" data-x="1">Tampil</button><button class="chip ${g.share?"":"on"}" data-ha="share" data-x="0">Sembunyi</button></div></div>${ketua}
   <button class="go" data-ha="${alone?"del":"leave"}" style="background:var(--c);color:var(--no);border:1px solid var(--bd)">${alone?"Hapus Halaqah":"Keluar dari Halaqah"}</button>`;
 }
 async function hqHome(){
   $("app").innerHTML=`<h1>Statistik</h1>${stSeg()}${rkSeg()}<div id="rkb"><div class="card sm">Memuat Halaqah…</div></div>`;
+  if(SERVER&&!glGet(who)){
+    $("rkb").innerHTML=`<div class="card"><b>Halaqah</b><div class="sm" style="margin-top:6px">Masuk dengan Google untuk membuat atau bergabung dengan Halaqah.</div><button class="go" id="hql">Masuk dengan Google</button></div>`;
+    $("hql").onclick=()=>loginGoogle("link");
+    return;
+  }
   try{
     if(hqForm=="join"&&hqCode&&!hqPrev)hqPrev=(await Api.hqPreview(hqCode))||{none:true};
     const html=hqOpen?hqDetailHTML(await Api.hqGet(hqOpen,hqMode)):hqListHTML(await Api.hqList());
@@ -906,7 +911,7 @@ async function hqHome(){
     $("rkb").innerHTML=DEMO+html;$("rkb").onclick=hqClick;
   }catch(e){
     hqOpen=null;if(!$("rkb"))return;
-    $("rkb").innerHTML=`<div class="card"><div>Halaqah belum bisa dimuat.</div><button class="go" data-ha="retry">Coba lagi</button></div>`;$("rkb").onclick=hqClick;
+    $("rkb").innerHTML=`<div class="card"><div>${esc(e.message||"Halaqah belum bisa dimuat.")}</div><button class="go" data-ha="retry">Coba lagi</button></div>`;$("rkb").onclick=hqClick;
   }
 }
 async function hqClick(e){
@@ -956,6 +961,23 @@ async function apiRaw(path,o,nama){
 }
 const api=(path,o)=>{const g=glGet(who);return apiRaw(path,Object.assign({},o,{token:g&&g.token}),who)};
 {const demo=Api.globalBoard.bind(Api);Api.globalBoard=async()=>{if(!SERVER)return demo();if(!glGet(who))throw new Error("belum_masuk");return api("/rank/global")}}
+if(SERVER){
+  const need=()=>{if(!glGet(who))throw new Error("Masuk dengan Google dulu untuk memakai Halaqah.")};
+  const hq=(path,method,body)=>{need();return api("/"+path,{method,body})};
+  Object.assign(Api,{
+    hqList:()=>hq("halaqah"),
+    hqGet:(id,mode)=>hq("halaqah/"+encodeURIComponent(id)+"?mode="+(mode=="30"?"30":"week")),
+    hqCreate:name=>hq("halaqah","POST",{name}),
+    hqPreview:async code=>{try{return await hq("halaqah/preview?code="+encodeURIComponent(code))}catch(e){if(/tidak ditemukan/i.test(e.message))return null;throw e}},
+    hqAccept:async id=>{await hq("invites/"+encodeURIComponent(id)+"/accept","POST")},
+    hqDecline:async(id,block)=>{await hq("invites/"+encodeURIComponent(id)+"/decline","POST",{block:!!block})},
+    hqLeave:async id=>{await hq("halaqah/"+encodeURIComponent(id)+"/leave","POST")},
+    hqKick:async(id,mid)=>{await hq("halaqah/"+encodeURIComponent(id)+"/members/"+encodeURIComponent(mid),"DELETE")},
+    hqTransfer:async(id,mid)=>{await hq("halaqah/"+encodeURIComponent(id)+"/transfer","POST",{memberId:Number(mid)})},
+    hqNewCode:async id=>{await hq("halaqah/"+encodeURIComponent(id)+"/code","POST")},
+    hqShare:async(id,v)=>{await hq("halaqah/"+encodeURIComponent(id)+"/share","PUT",{share:!!v})}
+  });
+}
 
 // --- Google Identity Services ---
 let gsiP=null;

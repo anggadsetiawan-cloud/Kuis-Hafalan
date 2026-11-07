@@ -11,6 +11,8 @@
 @media(prefers-color-scheme:dark){:root:not([data-theme]){--bg:#121212;--c:#1c1c1c;--c2:#262626;--t:#f2f2ef;--t2:#a6a6a0;--p:#818cf8;--pt:#111127;--ok:#23855c;--okt:#4fd19a;--no:#e5617f;--bd:#2f2f2e}}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#121212;--c:#1c1c1c;--c2:#262626;--t:#f2f2ef;--t2:#a6a6a0;--p:#818cf8;--pt:#111127;--ok:#23855c;--okt:#4fd19a;--no:#e5617f;--bd:#2f2f2e}
 :root[data-theme="light"]{color-scheme:light}
+:root[data-theme="mushaf"]{color-scheme:light;--bg:#f6efdc;--c:#fffaf0;--c2:#efe6cf;--t:#2a2118;--t2:#6b5d49;--p:#7a4b0f;--pt:#fff;--ok:#2f6b3f;--okt:#2f6b3f;--no:#b3382c;--warn:#e0a526;--bd:#e2d6b8}
+:root[data-theme="zamrud"]{color-scheme:dark;--bg:#0b1f18;--c:#12302a;--c2:#173a32;--t:#eef6f1;--t2:#a9c4b8;--p:#2fbf8f;--pt:#04251a;--ok:#1a7a54;--okt:#5fe0b0;--no:#f0728a;--warn:#f5b83d;--bd:#24473e}
 *{box-sizing:border-box}
 body{margin:0 auto;max-width:560px;padding:16px 16px 96px;font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-weight:400;font-size:15px;line-height:1.5;background:var(--bg);color:var(--t)}
 b{font-weight:600}
@@ -33,7 +35,7 @@ button{font:inherit;cursor:pointer;color:var(--t)}
 .opt.ar{text-align:right;font-size:22px;line-height:1.9}
 .opt.ok{border-color:var(--ok);background:rgba(31,122,84,.16)}
 .opt.no{border-color:var(--no);background:rgba(194,57,90,.14)}
-.sm{color:var(--t2);font-size:13px}
+.sm{color:var(--t2);font-size:14px}
 .sel{width:100%;margin-top:8px;padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--c);color:var(--t);font:inherit;font-size:16px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .fin{min-height:40px;padding:6px 16px;border:1px solid var(--no);border-radius:12px;background:var(--c);color:var(--no);font-weight:600}
@@ -50,7 +52,7 @@ button{font:inherit;cursor:pointer;color:var(--t)}
 .slot{min-height:58px;border:1px dashed var(--bd);border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;padding:6px 10px;background:var(--c)}
 .slot b{color:var(--t2);font-size:12px}
 .slot span{font-weight:600}
-.slot.nxt{border:2px solid var(--p);background:rgba(79,70,229,.06)}
+.slot.nxt{border:2px solid var(--p);background:rgba(79,70,229,.06);background:color-mix(in srgb,var(--p) 8%,transparent)}
 .slot.ok{border:1px solid var(--ok);background:var(--ok);color:#fff}
 .slot.ok b{color:#fff}
 .slot.yel{border:1px solid var(--warn);background:var(--warn);color:#3a2a00}
@@ -74,7 +76,7 @@ button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
 .vpop{animation:vpop .5s ease-out;transform-origin:50% 90%}
 @media (prefers-reduced-motion:reduce){.vpop{animation:none}}
 #tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;background:var(--c);border-top:1px solid var(--bd);padding:4px 6px calc(4px + env(safe-area-inset-bottom))}
-.tb{flex:1;min-height:56px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:500;color:var(--t2)}
+.tb{flex:1;min-height:56px;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:500;color:var(--t2)}
 .tb.on{color:var(--p);font-weight:600}
 .toast{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));max-width:536px;margin:0 auto;z-index:45;background:var(--t);color:var(--bg);padding:6px 8px 6px 16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:500}
 .toast button{background:none;border:0;color:inherit;text-decoration:underline;font-weight:600;min-height:44px;padding:0 10px}
@@ -802,7 +804,7 @@ const Api={
 let stV="stat";
 const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
 const HALAQAH=true; // Halaqah memakai server
-const VERSI="1.5";
+const VERSI="1.7";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){
@@ -1133,15 +1135,16 @@ function saranLogin(){
 }
 
 // ===== Tahap C: Latihan, Statistik, Pengaturan =====
-{const th=ls.get("tema");if(th)document.documentElement.dataset.theme=th;if(ls.get("anak")=="1")document.body.classList.add("anak")}
-const latSeg=cur=>`<div class="seg">${[["kuis","Kuis"],["susun","Susun urutan"]].map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-lat="${v}">${l}</button>`).join("")}</div>`;
+function tmc(v){const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=({mushaf:"#f6efdc",zamrud:"#0b1f18",dark:"#121212",light:"#f7f7f5"})[v]||"#4f46e5"}
+{const th=ls.get("tema");tmc(th);if(th)document.documentElement.dataset.theme=th;if(ls.get("anak")=="1")document.body.classList.add("anak")}
+const latSeg=cur=>`<div class="seg">${[["kuis","Kuis"],["susun","Susun urutan"],["kartu","Kartu"]].map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-lat="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-lat]");if(b){tab=b.dataset.lat;au.pause();navBar();route()}});
-const route=()=>tab=="kuis"?home():tab=="susun"?susunHome():tab=="target"?targetHome():tab=="statistik"?statsHome():tab=="pengaturan"?pengaturanHome():mutabaahHome();
+const route=()=>tab=="kuis"?home():tab=="susun"?susunHome():tab=="kartu"?(window.srsHome?srsHome():toast("Kartu belum termuat, muat ulang halaman")):tab=="target"?targetHome():tab=="statistik"?statsHome():tab=="pengaturan"?pengaturanHome():mutabaahHome();
 function navBar(){
-  const lat=tab=="kuis"||tab=="susun";
+  const lat=tab=="kuis"||tab=="susun"||tab=="kartu";
   $("tabs").innerHTML=[["mutabaah","check","Hari ini"],["kuis","quiz","Latihan"],["statistik","chart","Statistik"],["target","target","Target"],["pengaturan","gear","Pengaturan"]].map(([t,i,l])=>{const on=t=="kuis"?lat:tab==t;return`<button class="tb ${on?"on":""}" data-tab="${t}" ${on?'aria-current="page"':""}>${I(i)}<span>${l}</span></button>`}).join("");
   $("nav").innerHTML=akunChip();if($("acc"))$("acc").onclick=akunSheet;
-  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab=="kuis"&&tab=="susun"?"susun":b.dataset.tab;au.pause();navBar();route()});
+  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab=="kuis"&&(tab=="susun"||tab=="kartu")?tab:b.dataset.tab;au.pause();navBar();route()});
 }
 
 let stR=7;
@@ -1194,13 +1197,13 @@ function pengaturanHome(){
   const seg=(k,cur,o)=>`<div class="seg">${o.map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-${k}="${v}">${l}</button>`).join("")}</div>`;
   $("app").innerHTML=`<h1>Pengaturan</h1>
   <div class="card"><div class="rw"><div><b>Profil</b><div class="sm">${who?esc(who):"Belum diisi"} · ${gl?"Google: "+esc(gl.email||""):"Hanya di HP ini"}</div></div><button class="chip" id="pak">Kelola</button></div>${SERVER?(gl?`<div class="sm" style="margin-top:8px">Progresmu tersinkron ke akun Google.</div><button class="chip" id="phs" style="margin-top:8px">Hapus akun di server</button>`:`<div class="sm" style="margin-top:8px">Masuk dengan Google untuk menyimpan progres, pindah HP dengan aman, dan ikut peringkat.</div><button class="go" id="pgl">Masuk dengan Google</button>`):""}</div>
-  <div class="card"><b>Warna aplikasi</b>${seg("pt",th,[["auto","Otomatis"],["light","Terang"],["dark","Gelap"]])}
+  <div class="card"><b>Warna aplikasi</b><div class="chips">${[["auto","Otomatis"],["light","Terang"],["dark","Gelap"],["mushaf","Mushaf"],["zamrud","Zamrud"]].map(([v,l])=>`<button class="chip ${th==v?"on":""}" data-pt="${v}">${l}</button>`).join("")}</div>
   <div style="margin-top:16px"><b>Gambar taman</b></div>${seg("pv",vis,[["pohon","Pohon"],["hewan","Hewan"],["peta","Peta"]])}</div>
   <div class="card"><b>Efek suara</b>${seg("ps",muted?"off":"on",[["on","Hidup"],["off","Mati"]])}</div>
   <div class="card"><b>Mode anak</b><div class="sm">Huruf dan tombol di Latihan lebih besar, supaya nyaman dipakai anak.</div>${seg("pa",anak?"on":"off",[["off","Mati"],["on","Hidup"]])}</div>
   <div class="card"><b>Pemakaian offline</b><div class="sm">Simpan semua data surat dan audio agar kuis bisa dipakai tanpa internet.</div><button class="go" id="poff">Unduh untuk offline</button></div>
-  <div class="card"><b>Tentang</b><div class="sm">Kuis Hafalan · versi ${VERSI}</div><a class="chip" href="kebijakan-privasi.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--t);margin-top:8px">Kebijakan privasi</a> <a class="chip" href="syarat-ketentuan.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--t);margin-top:8px">Syarat penggunaan</a></div>${DW}`;
-  document.querySelectorAll("[data-pt]").forEach(b=>b.onclick=()=>{const v=b.dataset.pt;if(v=="auto"){ls.set("tema","");delete document.documentElement.dataset.theme}else{ls.set("tema",v);document.documentElement.dataset.theme=v}pengaturanHome()});
+  <div class="card"><b>Tentang</b><div class="sm">Kuis Hafalan · versi ${VERSI}</div><div class="sm" style="margin-top:4px">Teks ayat dan data halaman: Al Quran Cloud. Audio: EveryAyah (Syekh Mishary Alafasy).</div><a class="chip" href="kebijakan-privasi.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--t);margin-top:8px">Kebijakan privasi</a> <a class="chip" href="syarat-ketentuan.html" style="display:inline-flex;align-items:center;text-decoration:none;color:var(--t);margin-top:8px">Syarat penggunaan</a></div>${DW}`;
+  document.querySelectorAll("[data-pt]").forEach(b=>b.onclick=()=>{const v=b.dataset.pt;if(v=="auto"){ls.set("tema","");delete document.documentElement.dataset.theme}else{ls.set("tema",v);document.documentElement.dataset.theme=v}tmc(v=="auto"?"":v);pengaturanHome()});
   document.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{ls.set("vis:"+who,b.dataset.pv);pengaturanHome()});
   document.querySelectorAll("[data-ps]").forEach(b=>b.onclick=()=>{muted=b.dataset.ps=="off";ls.set("mute",muted?"1":"0");pengaturanHome()});
   $("pak").onclick=akunSheet;if($("pgl"))$("pgl").onclick=()=>loginGoogle("link");if($("phs"))$("phs").onclick=hapusAkunServer;
@@ -1226,4 +1229,7 @@ function pengaturanHome(){
 navBar();route();if(!who)askName(true);
 syncMulai();window.addEventListener("online",()=>syncMulai());
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
-</script></body></html>
+</script>
+<script src="mushaf.js"></script>
+<script src="srs.js"></script>
+</body></html>

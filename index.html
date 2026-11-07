@@ -50,6 +50,7 @@ button{font:inherit;cursor:pointer;color:var(--t)}
 .slot{min-height:58px;border:1px dashed var(--bd);border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;padding:6px 10px;background:var(--c)}
 .slot b{color:var(--t2);font-size:12px}
 .slot span{font-weight:600}
+.slot.nxt{border:2px solid var(--p);background:rgba(79,70,229,.06)}
 .slot.ok{border:1px solid var(--ok);background:var(--ok);color:#fff}
 .slot.ok b{color:#fff}
 .slot.yel{border:1px solid var(--warn);background:var(--warn);color:#3a2a00}
@@ -375,8 +376,10 @@ function susunStart(sub){
   const asc=(sub||Object.keys(selB()).map(Number)).slice().sort((a,b)=>a-b),d=dir=="auto"?rnd(["asc","desc"]):dir,L=d=="desc"?asc.reverse():asc;
   SU={L,pool:shuf(L),placed:{},flag:{},wrong:0,hints:0,wsince:0,selId:null,busy:{},t0:Date.now(),sig:sub?null:sigNow(),sub,hard};
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}
-  $("app").innerHTML=`<div class="top"><span class="sm" id="sst"></span><span><button class="chip" id="hint">💡 Petunjuk</button> <button class="fin" id="sback">Kembali</button></span></div>
-  <div class="sm" style="margin-top:6px">Urutan: ${d=="asc"?"sesuai mushaf, dari atas ke bawah":"terbalik, surat paling belakang di atas"}. Petunjuk aktif setelah 3 kali salah berturut-turut. Hijau = slot langsung benar, kuning = slot pernah diisi blok salah atau dibantu petunjuk.${hard?" <b>Mode sulit:</b> blok yang sudah terpasang tetap ada di kumpulan dan posisinya diacak setiap tarikan.":""}</div>
+  $("app").innerHTML=`<div class="top"><button class="fin" id="sback">Kembali</button><button class="chip" id="hint">💡 Petunjuk</button></div>
+  <div class="sm" id="sst" style="margin-top:8px"></div>
+  <div class="sm" style="margin-top:6px">Urutan: ${d=="asc"?"sesuai mushaf, dari atas ke bawah":"terbalik, surat paling belakang di atas"}. Ketuk blok lalu ketuk slotnya, atau tarik blok ke slot.</div>
+  <details style="margin-top:4px"><summary class="sm" style="cursor:pointer;padding:6px 0">Aturan dan arti warna</summary><div class="sm">Petunjuk aktif setelah 3 kali salah berturut-turut. Hijau = slot langsung benar, kuning = slot pernah diisi blok salah atau dibantu petunjuk.${hard?" <b>Mode sulit:</b> blok yang sudah terpasang tetap ada di kumpulan dan posisinya diacak setiap tarikan.":""}</div></details>
   <div class="slots">${L.map((s,i)=>`<div class="slot" data-slot="${i}"><b>${hideNo?"Posisi "+(i+1):"Surah ke-"+s}</b><span></span></div>`).join("")}</div>
   <div class="pool">${SU.pool.map(s=>`<div class="blk" data-b="${s}">${nm(s)}</div>`).join("")}</div>`;
   stat();
@@ -388,6 +391,7 @@ function susunStart(sub){
 
 const stat=()=>{
   $("sst").textContent=`Terpasang ${Object.keys(SU.placed).length} dari ${SU.L.length} · Salah ${SU.wrong}`;
+  const nx=SU.L.findIndex((s,j)=>!SU.placed[j]);document.querySelectorAll(".slot").forEach(e=>e.classList.toggle("nxt",+e.dataset.slot===nx));
   const h=$("hint");if(h){h.disabled=SU.wsince<3;h.style.opacity=h.disabled?.45:1}
 };
 function hint(){
@@ -798,7 +802,7 @@ const Api={
 let stV="stat";
 const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
 const HALAQAH=true; // Halaqah memakai server
-const VERSI="1.4";
+const VERSI="1.5";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){

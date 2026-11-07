@@ -1,7 +1,9 @@
-// Service worker sederhana: file aplikasi dan font tetap bisa dibuka tanpa internet.
-const C="hafalan-v3";
+// Service worker sederhana: file aplikasi, data halaman mushaf, dan font tetap bisa dibuka tanpa internet.
+const C="hafalan-v4";
+const AWAL=["./","./index.html","./kebijakan-privasi.html","./syarat-ketentuan.html","./manifest.webmanifest","./icon-192.png","./mushaf.js"];
 self.addEventListener("install",e=>{
-  e.waitUntil(caches.open(C).then(c=>c.addAll(["./","./index.html","./kebijakan-privasi.html","./manifest.webmanifest","./icon-192.png"])).catch(()=>{}));
+  // Tiap berkas didaftarkan sendiri-sendiri supaya satu berkas yang gagal tidak membatalkan semuanya
+  e.waitUntil(caches.open(C).then(c=>Promise.all(AWAL.map(u=>c.add(u).catch(()=>{})))));
   self.skipWaiting();
 });
 self.addEventListener("activate",e=>e.waitUntil(

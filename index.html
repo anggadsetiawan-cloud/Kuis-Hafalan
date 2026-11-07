@@ -508,7 +508,7 @@ function dlg(msg,okLabel,fn){
   document.body.appendChild(o);
   $("dno").onclick=()=>o.remove();$("dok").onclick=()=>{o.remove();fn()};
 }
-const DW=`<div class="sm" style="margin:12px 0">Tanpa akun Google, datamu hanya tersimpan di HP ini. Hindari menghapus data browser, atau masuk dengan Google agar progresmu aman.</div>`;
+const DW={toString:()=>((SERVER&&glGet(who))||tab!=="mutabaah")?"":`<div class="sm" style="margin:12px 0">Tanpa akun Google, datamu hanya tersimpan di HP ini. Hindari menghapus data browser, atau masuk dengan Google agar progresmu aman.</div>`};
 
 // ===== Target & Mutabaah, tahap 1: kondisi hafalan + target ziyadah =====
 const HAL=604,BAR=15,AYH=6236/604,HR=["Ahad","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
@@ -551,8 +551,8 @@ function tgHTML(t,p){
   <div style="margin-top:8px">Sisa yang dihafal: <b>${bh(p.remB)}</b> <span class="sm">(≈ ${n2(p.remB/BAR/20)} juz)</span></div>
   <div>Selesai sekitar: <b>${dfmt(p.last)}</b> <span class="sm">(${p.days} hari aktif)</span></div>
   <div style="margin-top:8px">Per hari: <b>${bh(p.perB)}</b> <span class="sm">(±${Math.round(ph*AYH)} ayat)</span></div>
-  <details style="margin-top:6px"><summary class="sm" style="cursor:pointer;padding:8px 0">Lihat per pekan dan per bulan</summary><div>Per pekan: ${amt(p.weekB)}</div><div style="margin-top:4px">Per bulan: ${amt(p.monthB)}</div></details>
-  <div class="sm" style="margin-top:8px">${w}${sel} Baris dibulatkan (setengah baris ke atas). Ayat memakai rata-rata mushaf Madinah (604 halaman, 15 baris).</div>`;
+  <div class="sm" style="margin-top:8px">${w}</div>
+  <details style="margin-top:6px"><summary class="sm" style="cursor:pointer;padding:8px 0">Lihat perincian perhitungan</summary><div>Per pekan: ${amt(p.weekB)}</div><div style="margin-top:4px">Per bulan: ${amt(p.monthB)}</div><div class="sm" style="margin-top:8px">${sel.trim()} Baris dibulatkan (setengah baris ke atas). Ayat memakai rata-rata mushaf Madinah (604 halaman, 15 baris).</div></details>`;
 }
 
 function tgRead(){
@@ -579,7 +579,7 @@ function mjHTML(t){
   const dua=c.cyc>14?` Untuk satu putaran 2 pekan butuh ${bh(Math.ceil(hb/14))} per hari, terlalu berat bagi kebanyakan orang, jadi tingkat dibatasi maksimal 1 juz per hari.`:"";
   return`<div class="card"><b>Murojaah harian</b><div class="chips">${ch}</div>
   <div style="margin-top:10px">Per hari: <b>${bh(c.per)}</b> <span class="sm">(tingkat ${MJL[c.k][0].toLowerCase()}${sel=="rec"?", rekomendasi":""})</span></div>
-  ${sholatHTML(c.per)}<div style="margin-top:8px">Satu putaran semua hafalan: <b>${pkn(c.cyc)}</b></div>
+  <div style="margin-top:8px">Satu putaran semua hafalan: <b>${pkn(c.cyc)}</b></div>
   ${gb>hb?`<div style="margin-top:8px" class="sm">Kalau hafalan sudah mencapai ${n2(gb/BAR/20)} juz: ±${bh(c2.per)} per hari, satu putaran ${pkn(c2.cyc)}.</div>`:""}
   <div class="sm" style="margin-top:8px">Murojaah setiap hari, tidak ikut hari libur ziyadah. Target dihitung dari hafalanmu saat ini dan ikut menyesuaikan setelah mutabaah aktif.${dua}</div></div>`;
 }
@@ -592,7 +592,7 @@ function targetHome(edit){
     <div class="card"><b>Hafalanmu saat ini</b><div>${amt(mtNow(saved))} <span class="sm">· awal: ${bh(haveOf(saved)*BAR)}</span></div>
     <div class="sm" style="margin-top:6px">Target: ${saved.goal>=30?"khatam 30 juz":"sampai juz "+saved.goal} · mulai ${dfmt(dparse(saved.start))}${saved.rest.length?" · libur "+saved.rest.map(d=>HR[d]).join(", "):""}</div></div>
     <div class="card">${tgHTML(saved,p)}</div>
-    ${mjHTML(saved)}<div class="card"><b>Isian harian</b><div class="sm">Isi murojaah dan ziyadah di tab Mutabaah. Hafalan bertambah otomatis dari isian ziyadah.</div></div>
+    ${mjHTML(saved)}<div class="card"><b>Isian harian</b><div class="sm">Isi murojaah dan ziyadah di tab Hari ini. Hafalan bertambah otomatis dari isian ziyadah.</div></div>
     <button class="go" id="te">Ubah target</button><button class="go" id="tx" style="${gh}">Hapus target</button>${DW}`;
     $("te").onclick=()=>{TG=Object.assign(tgDef(),saved);targetHome(true)};
     document.querySelectorAll("[data-mj]").forEach(b=>b.onclick=()=>{saved.mj=b.dataset.mj;ls.set(tgKey(),JSON.stringify(saved));targetHome()});
@@ -628,7 +628,7 @@ const mtGet=()=>{try{return JSON.parse(ls.get("mtb:"+who)||"{}")||{}}catch(e){re
 const mtSet=o=>ls.set("mtb:"+who,JSON.stringify(o));
 const mtNow=t=>{const L=mtGet();let z=0;for(const k in L)z+=L[k].z||0;return Math.min(HAL*BAR,Math.round(haveOf(t)*BAR)+z)};
 const sholatSplit=b=>{const a=Array(5).fill(Math.floor(b/5)),ex=[0,3,4,2,1];for(let i=0;i<b%5;i++)a[ex[i]]++;return a};
-const sholatHTML=b=>b<=0?"":`<div class="sm" style="margin-top:8px">Rekomendasi pembagian per shalat (boleh disesuaikan):</div><div style="display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin-top:4px">${sholatSplit(b).map((x,i)=>`<span class="sm">${SH[i]}</span><span>${x?bh(x):"—"}</span>`).join("")}</div>`;
+const sholatHTML=b=>b<=0?"":`<details style="margin-top:8px"><summary class="sm" style="cursor:pointer;padding:6px 0">Pembagian per shalat (rekomendasi, boleh disesuaikan)</summary><div style="display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin-top:4px">${sholatSplit(b).map((x,i)=>`<span class="sm">${SH[i]}</span><span>${x?bh(x):"—"}</span>`).join("")}</div></details>`;
 let mtOff=0,mtOpen={m:false,z:false};
 
 // Konteks satu hari: hafalan di awal hari itu, target murojaah & ziyadah, isian
@@ -705,7 +705,7 @@ function lcStats(t,L,pl){
 const LC=[["🌱","Hari pertama lengkap",s=>s.full>=1],["🔥","3 hari beruntun",s=>s.best>=3],["🔥","7 hari beruntun",s=>s.best>=7],["🔥","14 hari beruntun",s=>s.best>=14],["🔥","30 hari beruntun",s=>s.best>=30],["📖","Murojaah 7 hari",s=>s.md>=7],["📖","Murojaah 30 hari",s=>s.md>=30],["🌳","Ziyadah 1 juz",s=>s.z>=20*BAR],["🌳","Ziyadah 5 juz",s=>s.z>=100*BAR],["⭐","Melebihi target",s=>s.bon>=1],["🏆","Target tercapai",(s,p)=>p>=1]];
 function lcHTML(t,L,pl){
   const s=lcStats(t,L,pl),p=vsProg(t),got=LC.filter(b=>b[2](s,p)).length;
-  return`<b>Lencana</b> <span class="sm">${got} dari ${LC.length}</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">${LC.map(b=>{const on=b[2](s,p);return`<div style="text-align:center;padding:8px 4px;border:2px solid var(--bd);border-radius:12px;${on?"":"opacity:.4;filter:grayscale(1)"}"><div style="font-size:26px">${b[0]}</div><div class="sm">${b[1]}</div></div>`}).join("")}</div>`;
+  return`<b>Lencana</b> <span class="sm">${got} dari ${LC.length}</span><details style="margin-top:6px"><summary class="sm" style="cursor:pointer;padding:6px 0">Lihat semua lencana</summary><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">${LC.map(b=>{const on=b[2](s,p);return`<div style="text-align:center;padding:8px 4px;border:2px solid var(--bd);border-radius:12px;${on?"":"opacity:.4;filter:grayscale(1)"}"><div style="font-size:26px">${b[0]}</div><div class="sm">${b[1]}</div></div>`}).join("")}</div></details>`;
 }
 
 function vsState(t,L,pl,c0){
@@ -741,15 +741,16 @@ function mutabaahHome(){
   const sub=[c.mt>0?"Murojaah "+bh(c.mt):"",c.zt>0?"Ziyadah "+bh(c.zt):""].filter(Boolean).join(" · ")||"Hafalan "+bh(c.hb);
   const bar=(v,g)=>`<div style="height:10px;border-radius:6px;background:var(--bd);overflow:hidden;margin:8px 0"><div style="height:100%;width:${g>0?Math.min(100,Math.round(v/g*100)):0}%;background:var(--ok)"></div></div>`;
   const bonus=(v,g)=>v>g?`<div class="sm">Bonus +${bh(v-g)} (tidak mengurangi target besok)</div>`:"";
+  const pg=b=>String(Math.round(b/BAR*10)/10).replace(".",","),prog=(v,g)=>g<BAR?Math.round(v)+" dari "+Math.round(g)+" baris":pg(v)+" dari "+pg(g)+" halaman";
   const ctrl=(f,tg,dis)=>{
     const a=(x,y)=>`<button class="chip" data-f="${f}" ${x} ${dis}>${y}</button>`,inp=(s,p,mx)=>`<input id="${f}${s}" class="sel" style="flex:1;min-width:0;margin:0" type="number" min="0" ${mx} inputmode="numeric" placeholder="${p}" aria-label="${p}" ${dis}>`;
     return`<button class="go" data-f="${f}" data-v="${tg}" ${dis}>✓ Selesai sesuai target</button><details data-d="${f}" ${mtOpen[f]?"open":""} style="margin-top:8px"><summary class="sm" style="cursor:pointer;padding:10px 0">Atur manual</summary><div class="chips">${a(`data-a="${BAR}"`,"+1 halaman")}${a('data-a="5"',"+5 baris")}${a('data-v="0"',"Kosongkan")}</div><div class="row" style="margin-top:8px">${inp("h","halaman","")}${inp("b","baris",'max="14"')}${a('data-k="1"',"Simpan")}</div></details>`;
   };
-  const mc=c.mt>0?`<div>Target: <b>${bh(c.mt)}</b> · terisi <b>${bh(c.e.m)}</b></div>${bar(c.e.m,c.mt)}${bonus(c.e.m,c.mt)}${sholatHTML(c.mt)}<div style="margin-top:10px">${ctrl("m",c.mt,"")}</div>`:`<div class="sm">Belum ada hafalan untuk dimurojaah.</div>`;
-  const zc=c.zn?`<div class="sm">${c.zn}</div>`:`<div>Target: <b>${bh(c.zt)}</b> · terisi <b>${bh(c.e.z)}</b></div>${bar(c.e.z,c.zt)}${bonus(c.e.z,c.zt)}${mOk?"":`<div class="sm">Isi murojaah dulu supaya isian ziyadah terbuka. Targetnya sudah bisa dilihat untuk bersiap.</div>`}<div style="margin-top:10px">${ctrl("z",c.zt,mOk?"":"disabled")}</div>`;
+  const mc=c.mt>0?`<div>Terisi <b>${prog(c.e.m,c.mt)}</b></div>${bar(c.e.m,c.mt)}${bonus(c.e.m,c.mt)}${sholatHTML(c.mt)}<div style="margin-top:10px">${ctrl("m",c.mt,"")}</div>`:`<div class="sm">Belum ada hafalan untuk dimurojaah.</div>`;
+  const zc=c.zn?`<div class="sm">${c.zn}</div>`:`<div>Terisi <b>${prog(c.e.z,c.zt)}</b></div>${bar(c.e.z,c.zt)}${bonus(c.e.z,c.zt)}${mOk?"":`<div class="sm">Isi murojaah dulu supaya isian ziyadah terbuka. Targetnya sudah bisa dilihat untuk bersiap.</div>`}<div style="margin-top:10px">${ctrl("z",c.zt,mOk?"":"disabled")}</div>`;
   $("app").innerHTML=`<h1>Hari ini</h1><div class="seg">${dn.map((x,i)=>`<button class="chip ${mtOff==i?"on":""}" data-o="${i}">${x}</button>`).join("")}</div>
   <div class="sm" style="margin-top:8px">${dfmt(d)} · hafalan ${bh(c.hb)}</div>
-  <div class="card" style="display:flex;align-items:center;gap:16px">${ring(fr,nt?dd+"/"+nt:"—")}<div><div style="font-size:17px;font-weight:600">${ttl}</div><div class="sm">${sub}</div><div class="sm" style="margin-top:4px">Beruntun ${mtStreak(t,L,pl)} hari</div></div></div>
+  <div class="card" style="display:flex;align-items:center;gap:16px">${ring(fr,nt?dd+"/"+nt:"—")}<div><div style="font-size:17px;font-weight:600">${ttl}</div><div class="sm">${sub}</div><div class="sm" style="margin-top:4px">${nt?dd+" dari "+nt+" tugas selesai · ":""}Beruntun ${mtStreak(t,L,pl)} hari</div></div></div>
   <div class="card"><div class="th"><span class="tile">${I("repeat",20)}</span><b>Murojaah</b><span class="sp"></span>${c.mt>0?(mOk?em("✅","selesai")+" <span class='sm'>Selesai</span>":"<span class='sm'>Belum</span>"):""}</div><div style="margin-top:8px">${mc}</div></div>
   <div class="card"><div class="th"><span class="tile">${I("book",20)}</span><b>Ziyadah</b><span class="sp"></span>${c.zn?"":zOk?em("✅","selesai"):mOk?em("🔓","terbuka"):em("🔒","terkunci")}</div><div style="margin-top:8px">${zc}</div></div>
   <div class="card vs">${vsHTML(t,L,pl)}</div>
@@ -795,7 +796,7 @@ const Api={
 let stV="stat";
 const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
 const HALAQAH=true; // Halaqah memakai server
-const VERSI="1.2.1";
+const VERSI="1.3";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){

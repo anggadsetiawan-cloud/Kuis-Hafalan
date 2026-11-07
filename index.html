@@ -20,6 +20,8 @@ h1{font-size:24px;font-weight:600;letter-spacing:-.01em;margin:8px 0 4px}
 button{font:inherit;cursor:pointer;color:var(--t)}
 .chip{min-height:44px;padding:9px 14px;border:1px solid var(--bd);border-radius:12px;background:var(--c);font-weight:500}
 .chip.on{background:var(--p);border-color:var(--p);color:var(--pt)}
+.chip.tg::before{content:"○ ";opacity:.55}
+.chip.tg.on::before{content:"✓ ";opacity:1}
 .chip:disabled{opacity:.45;cursor:not-allowed}
 .seg{display:flex;gap:2px;padding:3px;margin-top:8px;background:var(--c2);border-radius:12px}
 .seg .chip{flex:1;min-height:40px;padding:6px 8px;border:0;border-radius:10px;background:none;font-size:14px;color:var(--t2)}
@@ -220,9 +222,9 @@ function home(msg){
     :`<select id="s1" class="sel">${op(a)}</select>`;
   $("app").innerHTML=`<h1>Latihan</h1>${latSeg("kuis")}<div class="sm" style="margin-top:8px">Latihan urutan surat dan sambung ayat</div>
   <div class="card"><b>Mode</b><div class="chips">${MD.map(([m,l])=>`<button class="chip ${mode==m?"on":""}" data-m="${m}">${l}</button>`).join("")}</div>${pilih}</div>
-  <div class="card"><b>Jenis soal</b><div class="chips">${Object.entries(TY).map(([k2,v])=>`<button class="chip ${types.has(k2)?"on":""}" data-t="${k2}">${v}</button>`).join("")}</div></div>
+  <div class="card"><b>Jenis soal</b><div class="chips">${Object.entries(TY).map(([k2,v])=>`<button class="chip tg ${types.has(k2)?"on":""}" data-t="${k2}">${v}</button>`).join("")}</div></div>
   <div class="sm">${msg||"Soal tanpa batas, tekan Selesai kapan saja. Suara: Syekh Mishary Alafasy. Butuh internet."}</div>
-  <button class="chip" id="lnk">Salin link pilihan</button><button class="go" id="go">Mulai</button>`;
+  <button class="chip" id="lnk">Bagikan pilihan</button><button class="go" id="go">Mulai</button>`;
   document.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>{mode=x.dataset.m;home()});
   document.querySelectorAll("[data-t]").forEach(x=>x.onclick=()=>{const t=x.dataset.t;types.has(t)?types.delete(t):types.add(t);home()});
   $("s1").onchange=e=>{P[k][0]=+e.target.value;if(!r)P[k][1]=P[k][0]};
@@ -257,7 +259,7 @@ function qHead(a){
   return`<button class="ib" id="fin" aria-label="Selesai">${I("x")}</button><div style="flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px" role="img" aria-label="Soal ${a?ans:ans+1}, benar ${score}">${seg}</div><div class="stc">${I("star",18)}<span>${score}</span></div>`;
 }
 function show(){
-  const q=cur,one=q.o.some(o=>o.ar||o.a||String(o.t).length>22);
+  const q=cur,one=q.o.some(o=>o.ar||o.a||String(o.t).length>12);
   $("app").innerHTML=`<div class="qh" id="qh">${qHead(false)}</div>
   <div class="qc">${q.q}${q.pa||q.qa?`<div style="margin-top:10px"><button class="chip" id="pq">${I("vol",18)} Putar ayat</button></div>`:""}</div>
   <div id="os" class="og ${one?"one":""}">${q.o.map((o,i)=>`<div class="row"><button class="opt ${o.ar?"ar":""}" data-i="${i}"><span class="lt">${"ABCDEFGH"[i]}</span><span class="ot">${o.t}</span></button>${o.a?`<button class="spk" data-p="${i}" aria-label="Dengar pilihan">${I("vol",20)}</button>`:""}</div>`).join("")}</div><div id="fb"></div>`;
@@ -282,7 +284,7 @@ function end(){
   au.pause();
   const p=ans?Math.round(score/ans*100):0;
   const m=!ans?"Belum ada soal yang dikerjakan.":p>=90?"Masya Allah, tabarakallah!":p>=60?"Alhamdulillah, terus diulang ya.":"Tidak apa-apa, bismillah ulangi lagi pelan-pelan.",ns=!ans?0:p>=90?3:p>=60?2:1;
-  $("app").innerHTML=`<h1>${who?esc(who)+" · ":""}Nilai ${p}</h1><div class="card" style="text-align:center"><div class="stars">${[1,2,3].map(n=>`<span class="${n<=ns?"on":""}">${I("star",40)}</span>`).join("")}</div><b>${score} benar dari ${ans} soal</b><div>${m}</div></div>${ans?`<div class="card" style="text-align:center"><p>${rnd(DOA)}</p><div class="ar" style="text-align:center;font-size:28px">رَبِّ زِدْنِي عِلْمًا</div><div class="sm">“Ya Rabbku, tambahkanlah ilmu kepadaku.”</div></div>`:""}
+  $("app").innerHTML=`<h1>${who?esc(who)+" · ":""}Nilai ${p}/100</h1><div class="card" style="text-align:center"><div class="stars">${[1,2,3].map(n=>`<span class="${n<=ns?"on":""}">${I("star",40)}</span>`).join("")}</div><b>${score} benar dari ${ans} soal</b><div>${m}</div></div>${ans?`<div class="card" style="text-align:center"><p>${rnd(DOA)}</p><div class="ar" style="text-align:center;font-size:28px">رَبِّ زِدْنِي عِلْمًا</div><div class="sm">“Ya Rabbku, tambahkanlah ilmu kepadaku.”</div></div>`:""}
   <button class="go" id="again">Main lagi</button><button class="go" id="hm" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Ubah pilihan</button>`;
   $("again").onclick=start;$("hm").onclick=()=>home();setTimeout(saranLogin,800);
 }
@@ -355,9 +357,9 @@ function recText(){
 function susunHome(){
   $("app").innerHTML=`<h1>Latihan</h1>${latSeg("susun")}<div class="sm" style="margin-top:8px">Tarik atau ketuk blok nama surat ke slot yang tepat</div>${pickHTML()}
   <div class="card"><b>Urutan slot</b><div class="seg">${[["asc","Sesuai mushaf"],["desc","Terbalik"],["auto","Otomatis"]].map(([d,l])=>`<button class="chip ${dir==d?"on":""}" data-d="${d}">${l}</button>`).join("")}</div>
-  <div class="sm" style="margin-top:8px">Sesuai mushaf: dari atas ke bawah mengikuti mushaf. Terbalik: dimulai dari surat paling belakang. Otomatis: arah dipilihkan acak.</div></div>
-  <div class="chips"><button class="chip ${hideNo?"on":""}" id="hn">Tanpa nomor surat (lebih sulit)</button><button class="chip ${hard?"on":""}" id="hd">Mode sulit: blok terus diacak</button><button class="chip" id="lnk">Salin link pilihan</button></div>
-  <div class="sm" style="margin-top:8px">Mode sulit: blok yang sudah terpasang tetap ada di kumpulan dan posisinya diacak setiap tarikan, jadi kamu harus mengandalkan hafalan urutan. Rekornya dipisah dari mode biasa.</div>
+  <details style="margin-top:6px"><summary class="sm" style="cursor:pointer;padding:6px 0">Apa bedanya?</summary><div class="sm">Sesuai mushaf: dari atas ke bawah mengikuti mushaf. Terbalik: dimulai dari surat paling belakang. Otomatis: arah dipilihkan acak.</div></details></div>
+  <div class="chips"><button class="chip tg ${hideNo?"on":""}" id="hn">Tanpa nomor surat (lebih sulit)</button><button class="chip tg ${hard?"on":""}" id="hd">Mode sulit: blok terus diacak</button><button class="chip" id="lnk">Bagikan pilihan</button></div>
+  <details style="margin-top:6px"><summary class="sm" style="cursor:pointer;padding:6px 0">Tentang mode sulit</summary><div class="sm">Mode sulit: blok yang sudah terpasang tetap ada di kumpulan dan posisinya diacak setiap tarikan, jadi kamu harus mengandalkan hafalan urutan. Rekornya dipisah dari mode biasa.</div></details>
   <div class="sm" id="wk" style="margin-top:8px"></div><div class="sm" id="rc"></div><button class="go" id="go">Mulai susun</button>`;
   pickBind(susunHome);
   document.querySelectorAll("[data-d]").forEach(x=>x.onclick=()=>{dir=x.dataset.d;susunHome()});
@@ -796,7 +798,7 @@ const Api={
 let stV="stat";
 const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
 const HALAQAH=true; // Halaqah memakai server
-const VERSI="1.3";
+const VERSI="1.4";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){
@@ -1143,12 +1145,13 @@ function stChart(days,f,tf,label){
   const n=days.length,W=320,H=112,bh_=H-20,bw=W/n,mx=Math.max(15,...days.map(c=>Math.max(c.e[f],c[tf])));
   let g=`<line x1="0" y1="${bh_}" x2="${W}" y2="${bh_}" style="stroke:var(--bd)" stroke-width="1"/>`;
   days.forEach((c,i)=>{
-    const x=i*bw+bw*.15,w=Math.max(3,bw*.7),v=c.e[f],h=v/mx*(bh_-4),tg=c[tf];
+    const x=i*bw+bw*.15,w=Math.max(3,bw*.7),v=c.e[f],h=v/mx*(bh_-18),tg=c[tf];
     if(v>0)g+=`<rect x="${x.toFixed(1)}" y="${(bh_-h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" style="fill:${tg>0&&v>=tg?"var(--ok)":"var(--p)"}"/>`;
-    if(tg>0){const y=bh_-tg/mx*(bh_-4);g+=`<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x+w).toFixed(1)}" y2="${y.toFixed(1)}" style="stroke:var(--t2)" stroke-width="1.5"/>`}
+    if(tg>0){const y=bh_-tg/mx*(bh_-18);g+=`<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x+w).toFixed(1)}" y2="${y.toFixed(1)}" style="stroke:var(--t2)" stroke-width="1.5"/>`}
     const d=dparse(c.k),lb=n<=7?HS[d.getDay()]:(d.getDate()%5==0?d.getDate():"");
     if(lb!=="")g+=`<text x="${(x+w/2).toFixed(1)}" y="${H-5}" text-anchor="middle" font-size="10" style="fill:var(--t2)">${lb}</text>`;
   });
+  g+=days.some(c=>c.e[f]>0)?`<text x="0" y="10" font-size="10" style="fill:var(--t2)">tertinggi ${bh(mx)}</text>`:`<text x="${W/2}" y="${(bh_/2).toFixed(0)}" text-anchor="middle" font-size="12" style="fill:var(--t2)">Belum ada isian</text>`;
   return`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Grafik ${label} per hari">${g}</svg>`;
 }
 function stEst(t,L,pl,today){
@@ -1174,7 +1177,7 @@ function statsHome(){
   days.forEach((c,i)=>{sz+=c.e.z;sm+=c.e.m;if(c.mt>0||c.zt>0){const ok=c.e.m>=c.mt&&c.e.z>=c.zt;if(ok)full++;if(ok||i<days.length-1)elig++}});
   const es=stEst(t,L,pl,today),best=lcStats(t,L,pl).best;
   const tile=(a,b)=>`<div style="background:var(--c2);border-radius:12px;padding:12px"><div class="sm">${a}</div><div style="font-size:17px;font-weight:600">${b}</div></div>`;
-  $("app").innerHTML=`<h1>Statistik</h1>${stSeg()}<div class="seg"><button class="chip ${stR==7?"on":""}" data-sr="7">7 hari</button><button class="chip ${stR==30?"on":""}" data-sr="30">30 hari</button></div>
+  $("app").innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 style="margin:0">Statistik</h1><div class="seg" style="margin:0;width:170px"><button class="chip ${stR==7?"on":""}" data-sr="7">7 hari</button><button class="chip ${stR==30?"on":""}" data-sr="30">30 hari</button></div></div>${stSeg()}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">${tile("Ziyadah",bh(sz)||"0 baris")}${tile("Murojaah",bh(sm)||"0 baris")}${tile("Hari terpenuhi",full+" dari "+elig)}${tile("Beruntun terbaik",best+" hari")}</div>
   <div class="card"><b>Ziyadah per hari</b>${stChart(days,"z","zt","ziyadah")}</div>
   <div class="card"><b>Murojaah per hari</b>${stChart(days,"m","mt","murojaah")}<div class="sm" style="margin-top:8px">Hijau: target terpenuhi · Indigo: sebagian · Garis: target hari itu</div></div>

@@ -17,8 +17,24 @@ const nilai=(p,r)=>{const o=get(),t=hariIni(),c=o.c[p],b0=c?c[0]:0;
   const b=r=="lancar"?Math.min(7,b0+1):r=="ragu"?Math.max(1,b0):1,sk={lancar:100,ragu:60,lupa:0}[r],s=c?Math.round((c[3]+sk)/2):sk;
   o.c[p]=[b,tambah(t,IV[b-1]),t,s,(c?c[4]:0)+1,c?c[5]:t];put(o);
   if(!c||c[2]!==t){const X=mtGet(),e=X[t]=X[t]||{m:0,z:0};e.m=Math.min(1500,(e.m||0)+BARIS);mtSet(X);if(typeof syncAntri=="function")syncAntri()}
-  return b};
-let edit=false,saring="semua",sesi=null;
+  sinkron();return b};
+let edit=false,saring="semua",sesi=null,tm=null,sibuk=false,akhir=0;
+// Sinkron ke server (hanya jika masuk dengan Google): baris yang lebih baru menang per halaman
+const lebihBaru=(a,b)=>!b||a[2]>b[2]||(a[2]===b[2]&&a[4]>=b[4]);
+async function srsSync(paksa){
+  if(sibuk||typeof SERVER==="undefined"||!SERVER||!glGet(who)||!navigator.onLine)return;
+  if(!paksa&&Date.now()-akhir<60000)return;
+  sibuk=true;akhir=Date.now();
+  try{
+    const s=await api("/sync/pages"),o=get();let ubah=false;
+    if(!o.a.length&&s.juz&&s.juz.length){o.a=s.juz;ubah=true}
+    (s.pages||[]).forEach(r=>{const c=[r[1],r[2],r[3],r[4],r[5],r[6]],l=o.c[r[0]];if(lebihBaru(c,l)&&JSON.stringify(c)!==JSON.stringify(l)){o.c[r[0]]=c;ubah=true}});
+    if(ubah)put(o);
+    await api("/sync/pages",{method:"PUT",body:{juz:o.a,pages:Object.entries(o.c).map(([p,c])=>[+p].concat(c))}});
+    if(ubah&&tab=="kartu"&&!sesi)srsHome();
+  }catch(e){}finally{sibuk=false}
+}
+const sinkron=()=>{clearTimeout(tm);tm=setTimeout(()=>srsSync(true),2000)};
 const rentang=x=>nm(x[0])+" "+x[1]+" – "+(x[0]==x[2]?"":nm(x[2])+" ")+x[3];
 
 function pilih(o){
@@ -26,12 +42,12 @@ function pilih(o){
   A.innerHTML=latSeg("kartu")+`<div class="card"><b>Juz yang sudah kamu hafal</b><div class="sm" style="margin-top:4px">Halaman yang memuat sebagian juz terpilih ikut dihitung.</div><div class="chips" id="sj">${Array.from({length:30},(_,i)=>`<button class="chip tg ${sel.has(i+1)?"on":""}" data-j="${i+1}">Juz ${i+1}</button>`).join("")}</div><div class="sm" id="sjn" style="margin-top:10px"></div><button class="go" id="sjs">Simpan</button>${o.a.length?`<button class="go" id="sjb" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Batal</button>`:""}</div>`;
   const hit=()=>{$("sjn").textContent=aktif({a:[...sel]}).length+" halaman akan dipakai"};hit();
   document.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{const j=+b.dataset.j;sel.has(j)?sel.delete(j):sel.add(j);b.classList.toggle("on",sel.has(j));hit()});
-  $("sjs").onclick=()=>{if(!sel.size)return toast("Pilih minimal satu juz");const n=get();n.a=[...sel].sort((x,y)=>x-y);put(n);edit=false;srsHome()};
+  $("sjs").onclick=()=>{if(!sel.size)return toast("Pilih minimal satu juz");const n=get();n.a=[...sel].sort((x,y)=>x-y);put(n);edit=false;sinkron();srsHome()};
   if($("sjb"))$("sjb").onclick=()=>{edit=false;srsHome()};
 }
 
 function srsHome(){
-  au.pause();sesi=null;const o=get(),A=$("app");
+  au.pause();sesi=null;srsSync();const o=get(),A=$("app");
   if(!M()){A.innerHTML=latSeg("kartu")+`<div class="card">Data halaman belum termuat. Buka sekali dengan internet, lalu coba lagi.</div>`;return}
   if(!o.a.length||edit)return pilih(o);
   const t=hariIni(),ak=aktif(o),q=antre(o),kot=Array(8).fill(0);
@@ -76,5 +92,6 @@ function srsHari(){
 window.srsHome=srsHome;
 {const m=window.mutabaahHome;window.mutabaahHome=function(){m();try{srsHari()}catch(e){}}}
 window.srsUji={nilai,antre,get,put,aktif};
+window.addEventListener("online",()=>srsSync(true));srsSync();
 if(tab=="mutabaah"&&$("app"))mutabaahHome();
 })();

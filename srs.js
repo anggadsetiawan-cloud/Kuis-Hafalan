@@ -35,6 +35,16 @@ async function srsSync(paksa){
   }catch(e){}finally{sibuk=false}
 }
 const sinkron=()=>{clearTimeout(tm);tm=setTimeout(()=>srsSync(true),2000)};
+const rgx=/^\d{4}-\d\d-\d\d$/;
+const valid=c=>Array.isArray(c)&&c.length==6&&Number.isInteger(c[0])&&c[0]>=1&&c[0]<=7&&rgx.test(c[1])&&rgx.test(c[2])&&Number.isInteger(c[3])&&c[3]>=0&&c[3]<=100&&Number.isInteger(c[4])&&c[4]>=0&&c[4]<=100000&&rgx.test(c[5]);
+const ekspor=()=>{const o=get();return JSON.stringify({v:1,tipe:"kartu",a:o.a,c:o.c})};
+function impor(txt){
+  let d;try{d=JSON.parse(txt)}catch(e){return toast("Isi bukan JSON yang valid")}
+  if(!d||d.v!==1||d.tipe!=="kartu"||!d.c||typeof d.c!=="object")return toast("Berkas ini bukan cadangan kartu");
+  const o=get();let n=0;
+  Object.entries(d.c).forEach(([p,c])=>{const k=+p;if(k>=1&&k<=604&&valid(c)&&lebihBaru(c,o.c[k])&&JSON.stringify(c)!==JSON.stringify(o.c[k])){o.c[k]=c;n++}});
+  if(!o.a.length&&Array.isArray(d.a)){const a=d.a.filter(j=>Number.isInteger(j)&&j>=1&&j<=30);if(a.length)o.a=[...new Set(a)].sort((x,y)=>x-y)}
+  put(o);sinkron();toast(n+" halaman diimpor");srsHome()}
 const rentang=x=>nm(x[0])+" "+x[1]+" – "+(x[0]==x[2]?"":nm(x[2])+" ")+x[3];
 
 function pilih(o){
@@ -53,16 +63,24 @@ function srsHome(){
   const t=hariIni(),ak=aktif(o),q=antre(o),kot=Array(8).fill(0);
   ak.forEach(p=>kot[o.c[p]?o.c[p][0]:0]++);
   const due=ak.filter(p=>o.c[p]&&o.c[p][1]<=t).length;
+  const jz=o.a.map(j=>{const ps=ak.filter(p=>{const x=M()[p-1];return(x[4]==j||x[5]==j)&&o.c[p]}),sk=ps.length?Math.round(ps.reduce((m,p)=>m+o.c[p][3],0)/ps.length):null;return`<div style="display:flex;justify-content:space-between;padding:4px 0"><span>Juz ${j}</span><span class="sm">${sk===null?"belum diulang":sk+"% · "+ps.length+" halaman"}</span></div>`}).join("");
+  const rawan=ak.filter(p=>o.c[p]&&o.c[p][3]<80).sort((a,b)=>o.c[a][3]-o.c[b][3]||o.c[b][4]-o.c[a][4]).slice(0,5).map(p=>`<div style="display:flex;justify-content:space-between;padding:4px 0"><span>Hal ${p} · ${esc(nm(M()[p-1][0]))}</span><span class="sm">${o.c[p][3]}% · ${o.c[p][4]}×</span></div>`).join("")||`<div class="sm">Belum ada halaman yang rawan lupa.</div>`;
+  const extra=`<div class="card"><b>Skor per juz</b>${jz}</div><div class="card"><b>Halaman rawan lupa</b><div class="sm" style="margin:4px 0">Skor terendah dari halaman yang sudah diulang.</div>${rawan}</div>`;
+  const extra2=`<div class="card"><details><summary style="cursor:pointer;font-weight:700">Cara kerja kartu</summary><div class="sm" style="margin-top:8px">Tiap halaman punya kotak 1 sampai 7. Lancar menaikkan kotak, Ragu menahannya, Lupa mengembalikannya ke kotak 1. Jeda ulang tiap kotak: 1, 3, 7, 14, 30, 60, dan 120 hari. Halaman yang terlambat diulang lebih dulu, lalu halaman baru (maksimal 5 per hari). Mengulang satu halaman menambah 15 baris murojaah di Hari ini.</div></details></div>
+  <div class="card"><b>Cadangan kartu</b><div class="sm" style="margin:4px 0 8px">Simpan data kartu ke berkas, atau pulihkan dari berkas. Pemulihan menggabungkan per halaman: yang diulang lebih baru menang.</div><div class="chips"><button class="chip" id="scp">Salin</button><button class="chip" id="sdl">Simpan ke file</button></div><textarea id="sit" rows="3" placeholder="…atau tempel JSON cadangan di sini" style="width:100%;margin-top:10px;padding:10px;border:1px solid var(--bd);border-radius:12px;background:var(--c);color:var(--t);font:inherit"></textarea><button class="chip" id="sim" style="margin-top:8px">Impor</button></div>`;
   const lst=ak.filter(p=>{const c=o.c[p];return saring=="semua"||(saring=="due"?c&&c[1]<=t:saring=="baru"?!c:c&&c[0]>=5)});
   A.innerHTML=latSeg("kartu")+`<div class="card"><b>Kartu murajaah</b><div class="sm" style="margin-top:4px">${ak.length} halaman aktif · ${due} jatuh tempo · ${kot[0]} belum diulang</div>
   <button class="go" id="sm" ${q.length?"":"disabled"}>${q.length?"Mulai ("+q.length+" kartu)":"Tidak ada kartu hari ini"}</button>
   <div class="chips"><button class="chip" id="sa">Atur juz</button></div></div>
   <div class="card"><b>Sebaran kotak</b><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px">${[1,2,3,4,5,6,7].map(i=>`<div style="text-align:center"><div class="sm">K${i}</div><b>${kot[i]}</b></div>`).join("")}</div><div class="sm" style="margin-top:8px">Kotak 1 diulang tiap 1 hari, kotak 7 tiap 120 hari. Lancar naik satu kotak, Lupa kembali ke kotak 1.</div></div>
-  <div class="card"><b>Daftar halaman</b><div class="chips">${[["semua","Semua"],["due","Jatuh tempo"],["baru","Belum"],["tinggi","Kotak 5–7"]].map(([v,l])=>`<button class="chip ${saring==v?"on":""}" data-sf="${v}">${l}</button>`).join("")}</div>
-  <div style="margin-top:8px">${lst.slice(0,60).map(p=>{const x=M()[p-1],c=o.c[p];return`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--bd)"><span>Hal ${p} · ${esc(nm(x[0]))}</span><span class="sm">${c?"Kotak "+c[0]+" · "+c[3]+"%":"Belum"}</span></div>`}).join("")||`<div class="sm">Tidak ada halaman.</div>`}${lst.length>60?`<div class="sm" style="margin-top:6px">…dan ${lst.length-60} halaman lain</div>`:""}</div></div>`;
+  ${extra}<div class="card"><b>Daftar halaman</b><div class="chips">${[["semua","Semua"],["due","Jatuh tempo"],["baru","Belum"],["tinggi","Kotak 5–7"]].map(([v,l])=>`<button class="chip ${saring==v?"on":""}" data-sf="${v}">${l}</button>`).join("")}</div>
+  <div style="margin-top:8px">${lst.slice(0,60).map(p=>{const x=M()[p-1],c=o.c[p];return`<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--bd)"><span>Hal ${p} · ${esc(nm(x[0]))}</span><span class="sm">${c?"Kotak "+c[0]+" · "+c[3]+"%":"Belum"}</span></div>`}).join("")||`<div class="sm">Tidak ada halaman.</div>`}${lst.length>60?`<div class="sm" style="margin-top:6px">…dan ${lst.length-60} halaman lain</div>`:""}</div></div>${extra2}`;
   $("sa").onclick=()=>{edit=true;srsHome()};
   if(q.length)$("sm").onclick=()=>{sesi={q,i:0,n:0};kartu()};
   document.querySelectorAll("[data-sf]").forEach(b=>b.onclick=()=>{saring=b.dataset.sf;srsHome()});
+  $("scp").onclick=()=>navigator.clipboard.writeText(ekspor()).then(()=>toast("Tersalin"),()=>toast("Tidak bisa menyalin"));
+  $("sdl").onclick=()=>{const u=URL.createObjectURL(new Blob([ekspor()],{type:"application/json"})),a=document.createElement("a");a.href=u;a.download="kartu-murajaah.json";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+  $("sim").onclick=()=>{const t=$("sit").value.trim();if(!t)return toast("Tempel JSON cadangan dulu");impor(t)};
 }
 
 function kartu(){
@@ -91,7 +109,7 @@ function srsHari(){
 }
 window.srsHome=srsHome;
 {const m=window.mutabaahHome;window.mutabaahHome=function(){m();try{srsHari()}catch(e){}}}
-window.srsUji={nilai,antre,get,put,aktif};
+window.srsUji={nilai,antre,get,put,aktif,impor,valid};
 window.addEventListener("online",()=>srsSync(true));srsSync();
 if(tab=="mutabaah"&&$("app"))mutabaahHome();
 })();

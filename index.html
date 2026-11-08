@@ -527,7 +527,7 @@ const n2=x=>String(+x.toFixed(2)).replace(".",",");
 const clamp=(v,a,b)=>Math.min(Math.max(isNaN(v)?a:v,a),b);
 const tgKey=()=>"tgt:"+who;
 const tgGet=()=>{try{return JSON.parse(ls.get(tgKey())||"null")}catch(e){return null}};
-const tgDef=()=>({w:who,jz:0,hl:0,goal:30,mode:"dur",months:12,speed:1,start:iso(new Date()),rest:[]});
+const tgDef=()=>({w:who,jz:0,hl:0,goal:30,mode:"dur",months:12,speed:1,start:iso(new Date()),rest:[],dir:"bawah"});
 const haveOf=t=>t.jz>=30?HAL:Math.min(HAL,t.jz*20+t.hl);
 const goalOf=t=>t.goal>=30?HAL:t.goal*20;
 const bh=b=>{b=Math.round(b);const h=Math.floor(b/BAR),r=b%BAR;return((h?h+" halaman":"")+(h&&r?" ":"")+(r?r+" baris":""))||"0 baris"};
@@ -565,7 +565,7 @@ function tgHTML(t,p){
 
 function tgRead(){
   if(!$("tj"))return;
-  TG.jz=clamp(parseInt($("tj").value),0,30);TG.hl=clamp(parseFloat($("th").value),0,HAL);
+  TG.jz=TG.js?TG.js.length:TG.jz;TG.hl=clamp(parseFloat($("th").value),0,HAL);
   TG.goal=+$("tg").value;
   if(TG.mode=="dur")TG.months=clamp(parseInt($("tm").value),1,120);else TG.speed=clamp(parseFloat($("ts").value),0.25,30);
   TG.start=$("td").value||iso(new Date());
@@ -600,20 +600,22 @@ function targetHome(edit){
     <div class="card"><b>Hafalanmu saat ini</b><div>${amt(mtNow(saved))} <span class="sm">· awal: ${bh(haveOf(saved)*BAR)}</span></div>
     <div class="sm" style="margin-top:6px">Target: ${saved.goal>=30?"khatam 30 juz":"sampai juz "+saved.goal} · mulai ${dfmt(dparse(saved.start))}${saved.rest.length?" · libur "+saved.rest.map(d=>HR[d]).join(", "):""}</div></div>
     <div class="card">${tgHTML(saved,p)}</div>
-    ${mjHTML(saved)}<div class="card"><b>Isian harian</b><div class="sm">Isi murojaah dan ziyadah di tab Hari ini. Hafalan bertambah otomatis dari isian ziyadah.</div></div>
+    ${saved.js?"":`<div class="card"><b>Pilih ulang juz yang sudah dihafal</b><div class="sm" style="margin:4px 0 8px">Targetmu mencatat jumlah juz, bukan juz yang mana. Pilih juz-nya supaya kartu murajaah tahu halaman mana yang dipakai.</div><button class="chip on" id="tre">Pilih juz</button></div>`}${mjHTML(saved)}<div class="card"><b>Isian harian</b><div class="sm">Isi murojaah dan ziyadah di tab Hari ini. Hafalan bertambah otomatis dari isian ziyadah.</div></div>
     <button class="go" id="te">Ubah target</button><button class="go" id="tx" style="${gh}">Hapus target</button>${DW}`;
     $("te").onclick=()=>{TG=Object.assign(tgDef(),saved);targetHome(true)};
+    if($("tre"))$("tre").onclick=()=>{TG=Object.assign(tgDef(),saved);targetHome(true)};
     document.querySelectorAll("[data-mj]").forEach(b=>b.onclick=()=>{saved.mj=b.dataset.mj;ls.set(tgKey(),JSON.stringify(saved));targetHome()});
     $("tx").onclick=()=>dlg("Hapus target ini?","Hapus",()=>{ls.set(tgKey(),"null");TG=null;targetHome();toast("Target dihapus")});
     return;
   }
   if(!TG||TG.w!==who)TG=saved?Object.assign(tgDef(),saved):tgDef();
   const hr=HR.map((h,i)=>`<button class="chip ${TG.rest.includes(i)?"on":""}" data-r="${i}">${h}</button>`).join("");
-  const gl=Array.from({length:30},(_,i)=>i+1).map(j=>`<option value="${j}" ${j==TG.goal?"selected":""}>${j==30?"Khatam 30 juz":"Juz "+j}</option>`).join("");
+  const KL=[5,10,15,20,25],gj=KL.concat([30]).concat(KL.includes(TG.goal)||TG.goal==30?[]:[TG.goal]).sort((a,b)=>a-b),gl=gj.map(j=>`<option value="${j}" ${j==TG.goal?"selected":""}>${j==30?"Khatam 30 juz":"Juz "+j+(KL.includes(j)?"":" (lama)")}</option>`).join("");
   $("app").innerHTML=`<h1>Target Hafalan</h1><div class="sm">Atur hafalanmu sekarang dan target ziyadah. Tersimpan di HP ini.</div>
-  <div class="card"><b>1. Hafalan awal</b><div class="sm" style="margin-top:6px">Juz penuh yang sudah dihafal, ditambah halaman di luar itu (1 juz ≈ 20 halaman).</div>
-  <div class="row" style="margin-top:8px"><div style="flex:1"><div class="sm">Juz penuh</div><input id="tj" class="sel" type="number" inputmode="numeric" min="0" max="30" value="${TG.jz}"></div>
-  <div style="flex:1"><div class="sm">+ Halaman</div><input id="th" class="sel" type="number" inputmode="decimal" min="0" step="0.5" value="${TG.hl}"></div></div></div>
+  <div class="card"><b>1. Hafalan awal</b><div class="sm" style="margin-top:6px">Pilih juz yang sudah dihafal, lalu tambahkan halaman di luar itu (1 juz ≈ 20 halaman).${TG.js?"":` Tercatat sebelumnya: ${TG.jz} juz penuh, pilih juz-nya.`}</div>
+  <div class="chips" id="tj">${Array.from({length:30},(_,i)=>`<button class="chip tg ${(TG.js||[]).includes(i+1)?"on":""}" data-jz="${i+1}">Juz ${i+1}</button>`).join("")}</div>
+  <div class="sm" style="margin-top:10px">+ Halaman di luar juz terpilih</div><input id="th" class="sel" type="number" inputmode="decimal" min="0" step="0.5" value="${TG.hl}">
+  <div class="sm" style="margin-top:10px">Arah hafalan berikutnya</div><div class="seg"><button class="chip ${TG.dir=="atas"?"on":""}" data-dir="atas">Dari atas (Al-Fatihah)</button><button class="chip ${TG.dir!="atas"?"on":""}" data-dir="bawah">Dari bawah (An-Nas)</button></div></div>
   <div class="card"><b>2. Target ziyadah</b><div class="sm" style="margin-top:8px">Target sampai</div><select id="tg" class="sel">${gl}</select>
   <div class="seg"><button class="chip ${TG.mode=="dur"?"on":""}" data-tm="dur">Tentukan durasi</button><button class="chip ${TG.mode=="spd"?"on":""}" data-tm="spd">Tentukan kecepatan</button></div>
   ${TG.mode=="dur"?`<div class="sm" style="margin-top:10px">Selesai dalam (bulan)</div><input id="tm" class="sel" type="number" inputmode="numeric" min="1" max="120" value="${TG.months}">`
@@ -624,6 +626,8 @@ function targetHome(edit){
   const pv=()=>{tgRead();$("pv").innerHTML=tgHTML(TG,tgPlan(TG))};
   ["tj","th","tg","tm","ts","td"].forEach(id=>{const e=$(id);if(e){e.oninput=pv;e.onchange=pv}});
   document.querySelectorAll("[data-tm]").forEach(b=>b.onclick=()=>{tgRead();TG.mode=b.dataset.tm;targetHome(true)});
+  document.querySelectorAll("[data-jz]").forEach(b=>b.onclick=()=>{const j=+b.dataset.jz;if(!TG.js)TG.js=[];const i=TG.js.indexOf(j);i<0?TG.js.push(j):TG.js.splice(i,1);TG.js.sort((a,c)=>a-c);b.classList.toggle("on",i<0);pv()});
+  document.querySelectorAll("[data-dir]").forEach(b=>b.onclick=()=>{tgRead();TG.dir=b.dataset.dir;targetHome(true)});
   document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{const d=+b.dataset.r,i=TG.rest.indexOf(d);i<0?TG.rest.push(d):TG.rest.splice(i,1);b.classList.toggle("on",i<0);pv()});
   $("tsv").onclick=()=>{tgRead();const p=tgPlan(TG);if(p.err||p.done)return pv();ls.set(tgKey(),JSON.stringify(TG));targetHome();toast("Target tersimpan ✓");syncAntri()};
   if($("tc"))$("tc").onclick=()=>targetHome();
@@ -804,7 +808,7 @@ const Api={
 let stV="stat";
 const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
 const HALAQAH=true; // Halaqah memakai server
-const VERSI="1.8";
+const VERSI="1.9";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){

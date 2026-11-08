@@ -6,7 +6,13 @@ const get=()=>{try{const o=JSON.parse(ls.get("srs:"+who)||"{}")||{};return{a:o.a
 const put=o=>ls.set("srs:"+who,JSON.stringify(o));
 const M=()=>typeof MUSHAF!=="undefined"?MUSHAF.p:null;
 // Halaman aktif: halaman yang memuat sebagian juz terpilih
-const aktif=o=>{const r=[],P=M();if(P)P.forEach((x,i)=>{if(o.a.includes(x[4])||o.a.includes(x[5]))r.push(i+1)});return r};
+// Halaman aktif: juz pilihan di Kartu dan di Target; halaman baru dari ziyadah bertambah dari ujung arah hafalan
+const aktif=o=>{const P=M();if(!P)return[];let t=null;try{t=typeof tgGet==="function"?tgGet():null}catch(e){}
+  const a=new Set(o.a.concat(t&&t.js||[])),r=new Set();
+  P.forEach((x,i)=>{if(a.has(x[4])||a.has(x[5]))r.add(i+1)});
+  if(t&&t.js&&t.dir){let z=0;const L=mtGet();for(const k in L)z+=L[k].z||0;let K=Math.floor((t.hl||0)+z/BARIS);
+    for(let i=0;i<604&&K>0;i++){const p=t.dir=="atas"?i+1:604-i;if(!r.has(p)){r.add(p);K--}}}
+  return[...r].sort((x,y)=>x-y)};
 // Antrean hari ini: semua yang jatuh tempo (paling lama terlambat dulu), lalu halaman baru sesuai sisa jatah harian
 const antre=o=>{const t=hariIni(),ak=aktif(o),due=[],baru=[];let hariIniBaru=0;
   ak.forEach(p=>{const c=o.c[p];if(!c)baru.push(p);else{if(c[5]===t)hariIniBaru++;if(c[1]<=t)due.push(p)}});

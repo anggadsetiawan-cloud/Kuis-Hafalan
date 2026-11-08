@@ -43,6 +43,7 @@ button{font:inherit;cursor:pointer;color:var(--t)}
 .row .opt{flex:1;margin:8px 0}
 .spk{flex:none;width:52px;height:52px;border:1px solid var(--bd);border-radius:12px;background:var(--c);display:flex;align-items:center;justify-content:center}
 .hd{display:flex;align-items:center;gap:4px;margin:-4px 0 4px}
+.gw{margin-left:auto;color:var(--t2)}
 .gh{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;border:0;background:none;font-weight:600}
 .ib{width:44px;height:44px;border:0;border-radius:12px;background:none;display:flex;align-items:center;justify-content:center;color:var(--t2)}
 .sp{flex:1}
@@ -808,7 +809,7 @@ const Api={
 let stV="stat";
 const SERVER=true; // akun Google, sinkron, dan Peringkat global aktif
 const HALAQAH=true; // Halaqah memakai server
-const VERSI="1.9";
+const VERSI="2.0";
 const stSeg=()=>!SERVER?"":`<div class="seg">${[["stat","Statistik"],["rank","Peringkat"]].map(([v,l])=>`<button class="chip ${stV==v?"on":""}" data-sv="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-sv]");if(b){stV=b.dataset.sv;statsHome()}});
 function rkRow(r){
@@ -1041,7 +1042,7 @@ function gantiProfil(n){
 function akunChip(){
   if(!who)return"";
   const g=glGet(who);
-  return`<div class="hd"><button class="gh" id="acc" aria-label="Profil dan akun"><span class="av">${esc(who.charAt(0).toUpperCase())}</span><span>${esc(who)}</span>${I("chev",16)}${g?`<span style="display:inline-flex;color:var(--okt)" title="Terhubung ke Google">${I("check",14)}</span>`:""}</button></div>`;
+  return`<div class="hd"><button class="gh" id="acc" aria-label="Profil dan akun"><span class="av">${esc(who.charAt(0).toUpperCase())}</span><span>${esc(who)}</span>${I("chev",16)}${g?`<span style="display:inline-flex;color:var(--okt)" title="Terhubung ke Google">${I("check",14)}</span>`:""}</button><button class="gh gw" id="gearb" aria-label="Pengaturan"${tab=="pengaturan"?' style="color:var(--p)"':""}>${I("gear",22)}</button></div>`;
 }
 function akunSheet(){
   const a=profilList(),g=glGet(who),o=document.createElement("div");o.className="ov";
@@ -1141,14 +1142,14 @@ function saranLogin(){
 // ===== Tahap C: Latihan, Statistik, Pengaturan =====
 function tmc(v){const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=({mushaf:"#f6efdc",zamrud:"#0b1f18",dark:"#121212",light:"#f7f7f5"})[v]||"#4f46e5"}
 {const th=ls.get("tema");tmc(th);if(th)document.documentElement.dataset.theme=th;if(ls.get("anak")=="1")document.body.classList.add("anak")}
-const latSeg=cur=>`<div class="seg">${[["kuis","Kuis"],["susun","Susun urutan"],["kartu","Kartu"]].map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-lat="${v}">${l}</button>`).join("")}</div>`;
+const latSeg=cur=>`<div class="seg">${[["kuis","Kuis"],["susun","Susun urutan"]].map(([v,l])=>`<button class="chip ${cur==v?"on":""}" data-lat="${v}">${l}</button>`).join("")}</div>`;
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-lat]");if(b){tab=b.dataset.lat;au.pause();navBar();route()}});
 const route=()=>tab=="kuis"?home():tab=="susun"?susunHome():tab=="kartu"?(window.srsHome?srsHome():toast("Kartu belum termuat, muat ulang halaman")):tab=="target"?targetHome():tab=="statistik"?statsHome():tab=="pengaturan"?pengaturanHome():mutabaahHome();
 function navBar(){
-  const lat=tab=="kuis"||tab=="susun"||tab=="kartu";
-  $("tabs").innerHTML=[["mutabaah","check","Hari ini"],["kuis","quiz","Latihan"],["statistik","chart","Statistik"],["target","target","Target"],["pengaturan","gear","Pengaturan"]].map(([t,i,l])=>{const on=t=="kuis"?lat:tab==t;return`<button class="tb ${on?"on":""}" data-tab="${t}" ${on?'aria-current="page"':""}>${I(i)}<span>${l}</span></button>`}).join("");
-  $("nav").innerHTML=akunChip();if($("acc"))$("acc").onclick=akunSheet;
-  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab=="kuis"&&(tab=="susun"||tab=="kartu")?tab:b.dataset.tab;au.pause();navBar();route()});
+  const lat=tab=="kuis"||tab=="susun";
+  $("tabs").innerHTML=[["mutabaah","check","Hari ini"],["kartu","repeat","Murojaah"],["kuis","quiz","Latihan"],["statistik","chart","Statistik"],["target","target","Target"]].map(([t,i,l])=>{const on=t=="kuis"?lat:tab==t;return`<button class="tb ${on?"on":""}" data-tab="${t}" ${on?'aria-current="page"':""}>${I(i)}<span>${l}</span></button>`}).join("");
+  $("nav").innerHTML=akunChip();if($("acc"))$("acc").onclick=akunSheet;if($("gearb"))$("gearb").onclick=()=>{tab="pengaturan";au.pause();navBar();route()};
+  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{tab=b.dataset.tab=="kuis"&&tab=="susun"?tab:b.dataset.tab;au.pause();navBar();route()});
 }
 
 let stR=7;

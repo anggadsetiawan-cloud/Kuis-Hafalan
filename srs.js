@@ -55,7 +55,7 @@ const rentang=x=>nm(x[0])+" "+x[1]+" – "+(x[0]==x[2]?"":nm(x[2])+" ")+x[3];
 
 function pilih(o){
   const sel=new Set(o.a),A=$("app");
-  A.innerHTML=latSeg("kartu")+`<div class="card"><b>Juz yang sudah kamu hafal</b><div class="sm" style="margin-top:4px">Halaman yang memuat sebagian juz terpilih ikut dihitung.</div><div class="chips" id="sj">${Array.from({length:30},(_,i)=>`<button class="chip tg ${sel.has(i+1)?"on":""}" data-j="${i+1}">Juz ${i+1}</button>`).join("")}</div><div class="sm" id="sjn" style="margin-top:10px"></div><button class="go" id="sjs">Simpan</button>${o.a.length?`<button class="go" id="sjb" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Batal</button>`:""}</div>`;
+  A.innerHTML="<h1>Murojaah</h1>"+`<div class="card"><b>Juz yang sudah kamu hafal</b><div class="sm" style="margin-top:4px">Halaman yang memuat sebagian juz terpilih ikut dihitung.</div><div class="chips" id="sj">${Array.from({length:30},(_,i)=>`<button class="chip tg ${sel.has(i+1)?"on":""}" data-j="${i+1}">Juz ${i+1}</button>`).join("")}</div><div class="sm" id="sjn" style="margin-top:10px"></div><button class="go" id="sjs">Simpan</button>${o.a.length?`<button class="go" id="sjb" style="background:var(--c);color:var(--t);border:2px solid var(--bd)">Batal</button>`:""}</div>`;
   const hit=()=>{$("sjn").textContent=aktif({a:[...sel]}).length+" halaman akan dipakai"};hit();
   document.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{const j=+b.dataset.j;sel.has(j)?sel.delete(j):sel.add(j);b.classList.toggle("on",sel.has(j));hit()});
   $("sjs").onclick=()=>{if(!sel.size)return toast("Pilih minimal satu juz");const n=get();n.a=[...sel].sort((x,y)=>x-y);put(n);edit=false;sinkron();srsHome()};
@@ -64,7 +64,7 @@ function pilih(o){
 
 function srsHome(){
   au.pause();sesi=null;srsSync();const o=get(),A=$("app");
-  if(!M()){A.innerHTML=latSeg("kartu")+`<div class="card">Data halaman belum termuat. Buka sekali dengan internet, lalu coba lagi.</div>`;return}
+  if(!M()){A.innerHTML="<h1>Murojaah</h1>"+`<div class="card">Data halaman belum termuat. Buka sekali dengan internet, lalu coba lagi.</div>`;return}
   if(!o.a.length||edit)return pilih(o);
   const t=hariIni(),ak=aktif(o),q=antre(o),kot=Array(8).fill(0);
   ak.forEach(p=>kot[o.c[p]?o.c[p][0]:0]++);
@@ -75,7 +75,7 @@ function srsHome(){
   const extra2=`<div class="card"><details><summary style="cursor:pointer;font-weight:700">Cara kerja kartu</summary><div class="sm" style="margin-top:8px">Tiap halaman punya kotak 1 sampai 7. Lancar menaikkan kotak, Ragu menahannya, Lupa mengembalikannya ke kotak 1. Jeda ulang tiap kotak: 1, 3, 7, 14, 30, 60, dan 120 hari. Halaman yang terlambat diulang lebih dulu, lalu halaman baru (maksimal 5 per hari). Mengulang satu halaman menambah 15 baris murojaah di Hari ini.</div></details></div>
   <div class="card"><b>Cadangan kartu</b><div class="sm" style="margin:4px 0 8px">Simpan data kartu ke berkas, atau pulihkan dari berkas. Pemulihan menggabungkan per halaman: yang diulang lebih baru menang.</div><div class="chips"><button class="chip" id="scp">Salin</button><button class="chip" id="sdl">Simpan ke file</button></div><textarea id="sit" rows="3" placeholder="…atau tempel JSON cadangan di sini" style="width:100%;margin-top:10px;padding:10px;border:1px solid var(--bd);border-radius:12px;background:var(--c);color:var(--t);font:inherit"></textarea><button class="chip" id="sim" style="margin-top:8px">Impor</button></div>`;
   const lst=ak.filter(p=>{const c=o.c[p];return saring=="semua"||(saring=="due"?c&&c[1]<=t:saring=="baru"?!c:c&&c[0]>=5)});
-  A.innerHTML=latSeg("kartu")+`<div class="card"><b>Kartu murajaah</b><div class="sm" style="margin-top:4px">${ak.length} halaman aktif · ${due} jatuh tempo · ${kot[0]} belum diulang</div>
+  A.innerHTML="<h1>Murojaah</h1>"+`<div class="card"><b>Kartu murajaah</b><div class="sm" style="margin-top:4px">${ak.length} halaman aktif · ${due} jatuh tempo · ${kot[0]} belum diulang</div>
   <button class="go" id="sm" ${q.length?"":"disabled"}>${q.length?"Mulai ("+q.length+" kartu)":"Tidak ada kartu hari ini"}</button>
   <div class="chips"><button class="chip" id="sa">Atur juz</button></div></div>
   <div class="card"><b>Sebaran kotak</b><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px">${[1,2,3,4,5,6,7].map(i=>`<div style="text-align:center"><div class="sm">K${i}</div><b>${kot[i]}</b></div>`).join("")}</div><div class="sm" style="margin-top:8px">Kotak 1 diulang tiap 1 hari, kotak 7 tiap 120 hari. Lancar naik satu kotak, Lupa kembali ke kotak 1.</div></div>
@@ -91,7 +91,7 @@ function srsHome(){
 
 function kartu(){
   au.pause();const A=$("app");
-  if(sesi.i>=sesi.q.length){A.innerHTML=latSeg("kartu")+`<div class="card" style="text-align:center"><h1>Selesai 🎉</h1><div>${sesi.n} halaman diulang. Murojaah hari ini bertambah ${sesi.n*BARIS} baris.</div><button class="go" id="sk">Kembali</button></div>`;$("sk").onclick=srsHome;return}
+  if(sesi.i>=sesi.q.length){A.innerHTML="<h1>Murojaah</h1>"+`<div class="card" style="text-align:center"><h1>Selesai 🎉</h1><div>${sesi.n} halaman diulang. Murojaah hari ini bertambah ${sesi.n*BARIS} baris.</div><button class="go" id="sk">Kembali</button></div>`;$("sk").onclick=srsHome;return}
   const p=sesi.q[sesi.i],x=M()[p-1],c=get().c[p];
   A.innerHTML=`<div class="top"><button class="fin" id="sx">Berhenti</button><span class="sm">${sesi.i+1} dari ${sesi.q.length}</span></div>
   <div class="card"><div class="chips"><span class="chip on">Halaman ${p}</span><span class="chip">Juz ${x[4]}</span><span class="chip">${c?"Kotak "+c[0]:"Baru"}</span></div>

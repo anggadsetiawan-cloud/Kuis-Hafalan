@@ -115,6 +115,7 @@ function srsHari(){
 }
 window.srsHome=srsHome;
 {const m=window.mutabaahHome;window.mutabaahHome=function(){m();try{srsHari()}catch(e){}}}
+window.srsAntre=()=>antre(get());
 window.srsUji={nilai,antre,get,put,aktif,impor,valid};
 window.addEventListener("online",()=>srsSync(true));srsSync();
 if(tab=="mutabaah"&&$("app"))mutabaahHome();
